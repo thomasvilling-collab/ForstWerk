@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#173f34">
+    <title>ForstWerk · Holzaufnahme</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+    <script src="locations.js" defer></script>
+    <script src="exchange.js" defer></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 5 7.5 17h4L8.5 22h15l-3-5h4L16 5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 22v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+            <div class="brand"><strong>ForstWerk</strong><span>HOLZAUFNAHME</span></div>
+            <div class="header-status"><span class="status-dot"></span> Waldaufnahme</div>
+        </div>
+    </header>
+
+    <main class="layout">
+        <div class="page-intro">
+            <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
+            <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
+        </div>
+
+        <section class="lists-card card" aria-labelledby="lists-heading">
+            <div class="section-top"><div><p class="eyebrow">VERKAUFSSORTIMENTE</p><h2 id="lists-heading">Meine Holzlisten</h2></div><span class="section-icon" aria-hidden="true">≡</span></div>
+            <label class="field-label" for="list-select">Aktive Holzliste</label>
+            <select id="list-select"></select>
+            <div class="list-create"><label class="field-label" for="list-name">Neue Holzliste</label><div class="list-create-row"><input id="list-name" maxlength="100" placeholder="z. B. Fichte Sägeholz" autocomplete="off"><button id="create-list" type="button">Liste anlegen</button></div></div>
+            <p class="list-hint">Jede Liste hat ihre eigenen Stämme und Eingaben.</p>
+            <button id="rename-list" class="text-button" type="button">Liste umbenennen</button>
+            <button id="delete-list" class="text-button list-delete" type="button">Aktive Liste löschen</button>
+        </section>
+
+        <section class="polter-card card" aria-labelledby="polter-heading">
+            <div class="section-top"><div><p class="eyebrow">AKTUELLE AUFNAHME</p><h2 id="polter-heading">Dein Polter</h2></div><span class="section-icon" aria-hidden="true">✳</span></div>
+            <label class="field-label" for="polter">Polterbezeichnung</label>
+            <input id="polter" type="text" maxlength="100" placeholder="z. B. Waldweg Nord" autocomplete="off" list="polter-suggestions">
+            <datalist id="polter-suggestions"></datalist>
+            <div class="location-box">
+                <div class="location-heading"><strong>Standort des Polters</strong><span>Optional</span></div>
+                <p class="location-hint">Koordinaten gelten für die Polterbezeichnung in dieser Holzliste.</p>
+                <div class="location-grid"><div><label class="field-label" for="latitude">Breitengrad</label><input id="latitude" inputmode="decimal" placeholder="z. B. 48,123456" autocomplete="off"></div><div><label class="field-label" for="longitude">Längengrad</label><input id="longitude" inputmode="decimal" placeholder="z. B. 8,765432" autocomplete="off"></div></div>
+                <div class="location-actions"><button type="button" id="get-location">📍 Standort übernehmen</button><button type="button" id="save-location">Koordinaten speichern</button><button type="button" id="clear-location">Standort entfernen</button></div>
+                <p id="location-status" class="location-hint" role="status"></p><a id="location-map" target="_blank" rel="noopener noreferrer" hidden>In Karte öffnen ↗</a>
+            </div>
+            <div class="defaults-grid">
+                <div><label class="field-label" for="species">Holzart</label><select id="species"><option value="">Bitte auswählen</option><option>Fichte</option><option>Tanne</option><option>Fichte/Tanne</option><option>Douglasie</option><option>Kiefer</option><option>Lärche</option><option>Buche</option><option>Eiche</option><option>Sonstige</option></select></div>
+                <div><label class="field-label" for="assortment">Sortiment</label><select id="assortment"><option value="">Bitte auswählen</option><option>Sägeholz</option><option>Industrieholz</option><option>Brennholz</option><option>Sonstiges</option></select></div>
+            </div>
+        </section>
+
+        <section class="entry-card card" aria-labelledby="entry-heading">
+            <div class="section-top entry-title"><div><p class="eyebrow">NEUER STAMM</p><h2 id="entry-heading">Maße &amp; Güte</h2></div><span class="entry-number" id="next-number">STAMM 01</span></div>
+            <form id="entry-form" novalidate>
+                <div class="measure-grid">
+                    <div><label class="field-label" for="length">Länge</label><div class="unit-field"><input id="length" inputmode="decimal" autocomplete="off" placeholder="0,0" aria-describedby="length-unit"><span id="length-unit">m</span></div></div>
+                    <div><label class="field-label" for="diameter">Mittendurchmesser <span>MD</span></label><div class="unit-field"><input id="diameter" inputmode="decimal" autocomplete="off" placeholder="0" aria-describedby="diameter-unit"><span id="diameter-unit">cm</span></div></div>
+                </div>
+                <div class="quick-row"><span>Schnellwahl Länge</span><div class="quick-buttons" aria-label="Länge auswählen"><button type="button" data-length="4">4 m</button><button type="button" data-length="5">5 m</button><button type="button" data-length="6">6 m</button></div></div>
+                <fieldset class="grades"><legend>Güte</legend><div class="grade-grid"><button type="button" data-grade="A" aria-pressed="false">A</button><button type="button" data-grade="B" aria-pressed="false">B</button><button type="button" data-grade="C" aria-pressed="false">C</button><button type="button" data-grade="D" aria-pressed="false">D</button><button type="button" data-grade="K" aria-pressed="false">K</button></div></fieldset>
+                <div class="entry-preview"><span>Volumen dieses Stamms <small>Zylinderformel</small></span><strong id="entry-volume">– <small>fm</small></strong></div>
+                <p id="form-error" class="form-error" role="alert" hidden></p>
+                <button class="primary-button" id="submit-entry" type="submit"><span class="plus" aria-hidden="true">＋</span><span>Stamm speichern</span><span class="button-arrow" aria-hidden="true">→</span></button>
+                <button class="text-button cancel-edit" id="cancel-edit" type="button" hidden>Bearbeitung abbrechen</button>
+            </form>
+        </section>
+
+        <section class="overview card" aria-labelledby="overview-heading">
+            <div class="section-top"><div><p class="eyebrow">DEIN ÜBERBLICK</p><h2 id="overview-heading">Aufnahme bisher</h2></div><span class="live-badge"><span class="status-dot"></span> Aktuell</span></div>
+            <div class="stat-grid"><div><span>Stämme</span><strong id="count">0 <small>Stück</small></strong></div><div><span>Gesamtvolumen</span><strong id="volume">0,000 <small>fm</small></strong></div></div>
+            <div class="list-heading"><h3>Erfasste Stämme</h3><span id="list-count">0 Einträge</span></div>
+            <div id="empty-state" class="empty-state"><div class="empty-icon" aria-hidden="true">＋</div><strong>Noch keine Stämme erfasst</strong><p>Dein erster Stamm erscheint hier.</p></div>
+            <ul id="entries" class="entry-list" aria-label="Erfasste Stämme"></ul>
+            <p class="footnote">Volumen rechnerisch nach der Zylinderformel. Angaben vor dem Verkauf prüfen.</p>
+        </section>
+        <section class="exchange-card card" aria-labelledby="exchange-heading">
+            <div class="section-top"><div><p class="eyebrow">SICHERN UND WEITERGEBEN</p><h2 id="exchange-heading">Holzlisten exportieren</h2></div><span class="section-icon" aria-hidden="true">↗</span></div>
+            <label class="field-label" for="export-scope">Auswahl</label>
+            <select id="export-scope"><option value="active">Aktive Holzliste</option><option value="all">Alle Holzlisten</option><option value="selection">Listen auswählen</option></select>
+            <div id="export-selection" hidden></div>
+            <div class="exchange-actions"><button type="button" id="export-json">JSON speichern</button><button type="button" id="export-csv">CSV für Excel</button><button type="button" id="export-pdf">PDF / Drucken</button></div>
+            <p class="list-hint">JSON für Sicherung und Datenaustausch · CSV für Tabellen · PDF über den Druckdialog speichern. Bitte angefangene Stämme vorher speichern.</p>
+            <p id="export-status" role="status"></p>
+            <div class="import-area"><h3>Holzlisten importieren</h3><label class="field-label" for="import-file">ForstWerk-JSON auswählen</label><input id="import-file" type="file" accept=".json,application/json"><div id="import-preview" hidden><p id="import-summary"></p><div id="import-lists"></div><button type="button" id="import-confirm">Ausgewählte Listen importieren</button></div><p id="import-status" role="status"></p></div>
+        </section>
+        <p class="storage-status" id="storage-status" role="status">Auf diesem Gerät gespeichert</p>
+    </main>
+    <div id="print-content" aria-hidden="true"></div>
+</body>
+</html>
