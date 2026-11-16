@@ -1,0 +1,9 @@
+{
+    "name": "ForstWerk – Holzaufnahme",
+    "short_name": "ForstWerk",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#f3f5f0",
+    "theme_color": "#173f34"
+}

@@ -12,7 +12,13 @@ python -m http.server 8000 --bind 127.0.0.1
 
 Dann auf demselben PC `http://localhost:8000` im Browser öffnen. Zum Beenden im Terminal `Strg+C` drücken.
 
-Die erste Oberfläche ist noch keine installierbare Offline-Web-App. Für das iPhone, den Offline-Betrieb und die Übertragung nach BelegWerk sind weitere Entwicklungsschritte erforderlich. Browserdaten können gelöscht werden; die lokale Speicherung ersetzt keine Datensicherung.
+ForstWerk kann nach einmaligem Laden über HTTPS offline verwendet werden. Der Import in BelegWerk ist noch nicht umgesetzt. Browserdaten können gelöscht werden; die lokale Speicherung ersetzt keine Datensicherung.
+
+## Offline und Updates
+
+Alle Programmdateien einschließlich `offline.js`, `service-worker.js` und `manifest.webmanifest` gemeinsam auf GitHub Pages hochladen. Vor der Umstellung vorhandene Holzlisten als JSON sichern: Safari und eine über den Home-Bildschirm geöffnete App können getrennte Speicher verwenden. Die Offline-Einrichtung in der tatsächlich genutzten Ansicht bei bestehender Internetverbindung abwarten; bei entsprechender Aufforderung die App schließen und wieder öffnen. Erst bei „Offline bereit auf diesem Gerät“ ohne Netz testen. Der Status „Gerät meldet online“ bestätigt nicht, dass tatsächlich Internet erreichbar ist.
+
+Bei einem Update erscheint ein Button. Angefangene Stammdaten, Standortänderungen und Importe vorher abschließen; geöffnete andere Fenster ebenfalls sichern. Für jede neue Veröffentlichung die Versionsnummer in `service-worker.js` und in `index.html` erhöhen, damit das neue Dateipaket vollständig heruntergeladen wird. Änderungen an den Programmdateien und am Service Worker zusammen veröffentlichen. Karten, Cloud-Übertragung und Updateprüfung benötigen Internet. GPS hängt vom Gerät und Empfang ab. Die Funktion muss auf dem echten iPhone geprüft werden.
 
 ## Export und Import
 
