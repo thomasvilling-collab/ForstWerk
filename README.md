@@ -16,7 +16,7 @@ ForstWerk kann nach einmaligem Laden über HTTPS offline verwendet werden. Der I
 
 ## Offline und Updates
 
-Alle Programmdateien einschließlich `offline.js`, `service-worker.js` und `manifest.webmanifest` gemeinsam auf GitHub Pages hochladen. Vor der Umstellung vorhandene Holzlisten als JSON sichern: Safari und eine über den Home-Bildschirm geöffnete App können getrennte Speicher verwenden. Die Offline-Einrichtung in der tatsächlich genutzten Ansicht bei bestehender Internetverbindung abwarten; bei entsprechender Aufforderung die App schließen und wieder öffnen. Erst bei „Offline bereit auf diesem Gerät“ ohne Netz testen. Der Status „Gerät meldet online“ bestätigt nicht, dass tatsächlich Internet erreichbar ist.
+Alle Programmdateien einschließlich `improvements.js`, `offline.js`, `service-worker.js` und `manifest.webmanifest` gemeinsam auf GitHub Pages hochladen. Vor der Umstellung vorhandene Holzlisten als JSON sichern: Safari und eine über den Home-Bildschirm geöffnete App können getrennte Speicher verwenden. Die Offline-Einrichtung in der tatsächlich genutzten Ansicht bei bestehender Internetverbindung abwarten; bei entsprechender Aufforderung die App schließen und wieder öffnen. Erst bei „Offline bereit auf diesem Gerät“ ohne Netz testen. Der Status „Gerät meldet online“ bestätigt nicht, dass tatsächlich Internet erreichbar ist.
 
 Bei einem Update erscheint ein Button. Angefangene Stammdaten, Standortänderungen und Importe vorher abschließen; geöffnete andere Fenster ebenfalls sichern. Für jede neue Veröffentlichung die Versionsnummer in `service-worker.js` und in `index.html` erhöhen, damit das neue Dateipaket vollständig heruntergeladen wird. Änderungen an den Programmdateien und am Service Worker zusammen veröffentlichen. Karten, Cloud-Übertragung und Updateprüfung benötigen Internet. GPS hängt vom Gerät und Empfang ab. Die Funktion muss auf dem echten iPhone geprüft werden.
 
@@ -25,6 +25,8 @@ Bei einem Update erscheint ein Button. Angefangene Stammdaten, Standortänderung
 Unter „Holzlisten exportieren“ kann die aktive Liste, eine Auswahl oder alle Listen als JSON oder CSV exportiert werden. JSON ist die ForstWerk-Sicherung und enthält Listen, Stämme und Voreinstellungen. CSV ist eine UTF-8-Tabelle mit Semikolon und Dezimalkomma für Tabellenprogramme. Exportiert werden gespeicherte Stämme; angefangene Eingaben vorher speichern. Für PDF „PDF / Drucken“ wählen und im Druckdialog als PDF speichern.
 
 In CSV und PDF stehen Polter und Sortiment im Kopf des jeweiligen Abschnitts. Enthält eine Liste verschiedene Polter oder Sortimente, wird für jede Kombination ein Abschnitt ausgegeben. Das berechnete Volumen wird als fm angezeigt.
+
+Stammnummern gelten innerhalb einer Liste, bleiben beim Bearbeiten erhalten und werden nach dem Löschen nicht erneut vergeben. Alte Listen werden beim ersten Laden in ihrer damaligen Reihenfolge nummeriert. Für ungewöhnliche Maße gelten einstellbare Hinweisgrenzen; nach Bestätigung können sie gespeichert werden. „Alle Listen sichern“ startet den Download einer JSON-Datei; die erfolgreiche Ablage der Datei muss geprüft werden. Der Sicherungshinweis erinnert nach sieben Tagen erneut.
 
 ## Polterstandorte
 

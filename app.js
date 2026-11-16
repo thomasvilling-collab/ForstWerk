@@ -21,6 +21,52 @@ let storageAvailable = true;
 let storageBlocked = false;
 let lists = [{id : makeId(), name : "Holzliste 1", entries : [], defaults : {}}];
 let activeId = lists[0].id;
+let limits = {diameterMin : 5, diameterMax : 100, lengthMin : 1, lengthMax : 20};
+let nextFocus = "diameter";
+
+function validLimits(value)
+{
+    return value && [value.diameterMin, value.diameterMax, value.lengthMin, value.lengthMax]
+        .every((number) => Number.isFinite(number) && number > 0 && number <= 1000) &&
+        value.diameterMin < value.diameterMax && value.lengthMin < value.lengthMax;
+}
+
+function activeListNumber()
+{
+    const list = lists.find((item) => item.id === activeId);
+    return list.nextNumber || 1;
+}
+
+function normalizeNumbers(list)
+{
+    const used = new Set();
+    let highest = 0;
+    for (const entry of list.entries)
+    {
+        if (entry.number !== undefined)
+        {
+            if (!Number.isSafeInteger(entry.number) || entry.number < 1 || used.has(entry.number))
+            {
+                throw new Error("Ungültige Stammnummer");
+            }
+            used.add(entry.number);
+            highest = Math.max(highest, entry.number);
+        }
+    }
+    if (list.nextNumber !== undefined && (!Number.isSafeInteger(list.nextNumber) || list.nextNumber <= highest))
+    {
+        throw new Error("Ungültige nächste Stammnummer");
+    }
+    let next = Math.max(highest + 1, list.nextNumber || 1);
+    for (const entry of list.entries)
+    {
+        if (entry.number === undefined)
+        {
+            entry.number = next++;
+        }
+    }
+    list.nextNumber = next;
+}
 
 function makeId()
 {
@@ -159,7 +205,7 @@ function save()
     const active = lists.find((list) => list.id === activeId);
     active.entries = entries;
     active.defaults = currentDefaults();
-    const state = {version : 2, lists, activeId};
+    const state = {version : 2, lists, activeId, limits, nextFocus};
     updateListSelect();
     try
     {
@@ -172,6 +218,10 @@ function save()
         storageAvailable = false;
         element("storage-status").textContent =
             "Speichern auf diesem Gerät nicht möglich. Die Eingaben sind nur vorübergehend vorhanden.";
+    }
+    if (typeof updateBackupReminder === "function")
+    {
+        updateBackupReminder();
     }
 }
 
@@ -216,6 +266,7 @@ function restore()
             {
                 throw new Error("Ungültige Stammdaten");
             }
+            normalizeNumbers(list);
         });
         if (state.version === 2 && !ids.has(state.activeId))
         {
@@ -225,6 +276,14 @@ function restore()
         activeId = state.version === 2 ? state.activeId : lists[0].id;
         const active = lists.find((list) => list.id === activeId);
         entries = active.entries;
+        if (state.limits && validLimits(state.limits))
+        {
+            limits = state.limits;
+        }
+        if (["length", "diameter"].includes(state.nextFocus))
+        {
+            nextFocus = state.nextFocus;
+        }
         applyDefaults(active.defaults);
     }
     catch (error)
@@ -259,7 +318,7 @@ function render()
         item.className = "entry-item";
         const badge = document.createElement("span");
         badge.className = "entry-index";
-        badge.textContent = String(index + 1).padStart(2, "0");
+        badge.textContent = String(entry.number).padStart(2, "0");
         const detail = document.createElement("div");
         detail.className = "entry-details";
         const title = document.createElement("strong");
@@ -275,13 +334,13 @@ function render()
         const edit = document.createElement("button");
         edit.type = "button";
         edit.textContent = "Ändern";
-        edit.setAttribute("aria-label", `Stamm ${index + 1} ändern`);
+        edit.setAttribute("aria-label", `Stamm ${entry.number} ändern`);
         edit.addEventListener("click", () => startEdit(entry.id));
         const remove = document.createElement("button");
         remove.type = "button";
         remove.className = "delete";
         remove.textContent = "Löschen";
-        remove.setAttribute("aria-label", `Stamm ${index + 1} löschen`);
+        remove.setAttribute("aria-label", `Stamm ${entry.number} löschen`);
         remove.addEventListener("click", () => removeEntry(entry.id));
         actions.append(edit, remove);
         item.append(badge, detail, actions);
@@ -299,7 +358,12 @@ function render()
         `${entries.length} ${entries.length === 1 ? "Eintrag" : "Einträge"}`;
     element("empty-state").hidden = entries.length > 0;
     element("next-number").textContent =
-        editingId ? "BEARBEITEN" : `STAMM ${String(entries.length + 1).padStart(2, "0")}`;
+        editingId ? `STAMM ${entries.find((item) => item.id === editingId).number} BEARBEITEN` :
+            `STAMM ${String(activeListNumber()).padStart(2, "0")}`;
+    if (typeof renderSummary === "function")
+    {
+        renderSummary();
+    }
     setVolume();
     updateLengthButtons();
 }
@@ -343,7 +407,7 @@ function finishEdit()
 function removeEntry(id)
 {
     const index = entries.findIndex((entry) => entry.id === id);
-    if (index < 0 || !window.confirm(`Stamm ${index + 1} wirklich löschen?`))
+    if (index < 0 || !window.confirm(`Stamm ${entries[index].number} wirklich löschen?`))
     {
         return;
     }
@@ -401,8 +465,24 @@ form.addEventListener("submit", (event) => {
         missing[0][0].focus();
         return;
     }
+    const warnings = [];
+    if (diameter < limits.diameterMin || diameter > limits.diameterMax)
+    {
+        warnings.push(`Mittendurchmesser ${diameter.toLocaleString("de-DE")} cm`);
+    }
+    if (length < limits.lengthMin || length > limits.lengthMax)
+    {
+        warnings.push(`Länge ${length.toLocaleString("de-DE")} m`);
+    }
+    if (warnings.length && !window.confirm(`${warnings.join(" und ")} außerhalb deiner Hinweisgrenzen. Trotzdem speichern?`))
+    {
+        return;
+    }
+    const index = entries.findIndex((entry) => entry.id === editingId);
+    const list = lists.find((item) => item.id === activeId);
     const record = {
         id : editingId || makeId(),
+        number : index >= 0 ? entries[index].number : activeListNumber(),
         polter : fields.polter.value.trim(),
         species : fields.species.value,
         assortment : fields.assortment.value,
@@ -410,7 +490,6 @@ form.addEventListener("submit", (event) => {
         length,
         grade
     };
-    const index = entries.findIndex((entry) => entry.id === editingId);
     if (index >= 0)
     {
         entries[index] = record;
@@ -418,10 +497,12 @@ form.addEventListener("submit", (event) => {
     else
     {
         entries.push(record);
+        list.nextNumber = record.number + 1;
     }
     finishEdit();
     save();
-    fields.diameter.focus({preventScroll : true});
+    fields[nextFocus].focus({preventScroll : true});
+    fields[nextFocus].select();
 });
 
 gradeButtons.forEach((button) => button.addEventListener("click", () => {

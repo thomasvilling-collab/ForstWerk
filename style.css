@@ -54,10 +54,22 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .offline-panel small { margin-left: auto; color: #718575; }
 .offline-panel button { padding: 8px 12px; border: 1px solid #28694c; border-radius: 8px; background: #28694c; color: white; font-weight: 700; }
 .offline-panel button[hidden] { display: none; }
-.lists-card { grid-column: 1 / -1; grid-row: 3; }
-.polter-card { grid-column: 1; grid-row: 4; }
-.entry-card { grid-column: 1; grid-row: 5; }
-.overview { grid-column: 2; grid-row: 4 / 6; }
+.backup-panel { grid-column: 1 / -1; grid-row: 3; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 14px 16px; border: 1px solid #e1e9e0; border-radius: 10px; background: white; }
+.backup-panel strong, .backup-panel span { display: block; }
+.backup-panel strong { font-size: 13px; }
+.backup-panel span { margin-top: 4px; font-size: 12px; color: #728176; }
+.backup-panel button, #save-settings { border: 1px solid #28694c; border-radius: 8px; background: #28694c; color: white; font-weight: 700; padding: 10px 12px; }
+.lists-card { grid-column: 1 / -1; grid-row: 4; }
+.polter-card { grid-column: 1; grid-row: 5; }
+.entry-card { grid-column: 1; grid-row: 6; }
+.overview { grid-column: 2; grid-row: 5 / 7; }
+.capture-settings, .summary-panel { margin-top: 20px; border-top: 1px solid #e5ece4; padding-top: 15px; }
+.capture-settings summary, .summary-panel summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #315b40; margin-bottom: 14px; }
+.limits-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
+#settings-status { margin: 9px 0 0; font-size: 12px; color: #496450; }
+.summary-table { width: 100%; border-collapse: collapse; margin: 8px 0 18px; font-size: 12px; }
+.summary-table th, .summary-table td { text-align: left; border-bottom: 1px solid #e5ece4; padding: 7px 3px; overflow-wrap: anywhere; }
+.summary-table th:not(:first-child), .summary-table td:not(:first-child) { text-align: right; white-space: nowrap; }
 .list-create { margin-top: 17px; }
 .list-create-row { display: flex; gap: 10px; }
 .list-create-row input { min-width: 0; flex: 1; }
@@ -81,9 +93,9 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .unit-field:focus-within { outline: 3px solid #d4e9d8; border-color: #7aae88; }
 .unit-field input { border: 0; outline: 0; height: 57px; font-size: 22px; font-weight: 650; background: transparent; }
 .unit-field span { padding: 0 13px; color: #829588; font-size: 13px; font-weight: 650; }
-.quick-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 16px 0 20px; color: #7b8d7d; font-size: 12px; }
-.quick-buttons { display: flex; gap: 6px; }
-.quick-buttons button { background: #f4f7f2; border: 1px solid #e1eae0; border-radius: 7px; color: #47664f; padding: 7px 11px; font-size: 12px; font-weight: 700; }
+.quick-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin: 16px 0 20px; color: #7b8d7d; font-size: 12px; }
+.quick-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick-buttons button { background: #f4f7f2; border: 1px solid #e1eae0; border-radius: 7px; color: #47664f; padding: 7px 11px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .quick-buttons button[aria-pressed="true"] { background: #e0efe2; border-color: #83ae8e; color: #1b6444; }
 .grades { border: 0; padding: 0; margin: 0; }
 .grades legend { padding: 0; }
@@ -136,7 +148,7 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
     .intro-icon svg { width: 36px; }
     h1 { font-size: 31px; }
     .card { padding: 19px; border-radius: 14px; }
-    .offline-panel, .lists-card, .polter-card, .entry-card, .overview, .exchange-card { grid-column: 1; grid-row: auto; }
+    .offline-panel, .backup-panel, .lists-card, .polter-card, .entry-card, .overview, .exchange-card { grid-column: 1; grid-row: auto; }
     .storage-status { grid-column: 1; }
 }
 @media print {

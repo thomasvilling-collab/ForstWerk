@@ -22,7 +22,7 @@ async function showOfflineStatus(registration)
             }
             const cache = await caches.open(cacheName);
             const required = ["./index.html", "./style.css", "./app.js", "./locations.js",
-                "./exchange.js", "./offline.js", "./manifest.webmanifest"];
+                "./exchange.js", "./improvements.js", "./offline.js", "./manifest.webmanifest"];
             const files = await Promise.all(required.map((file) => cache.match(new URL(file, registration.scope).href)));
             if (files.some((file) => !file))
             {
@@ -55,6 +55,12 @@ function showUpdate(worker)
 function unsavedWork()
 {
     if (editingId || fields.diameter.value.trim() || element("list-name").value.trim() || !element("import-preview").hidden)
+    {
+        return true;
+    }
+    if (element("next-focus").value !== nextFocus || parseNumber(element("diameter-min").value) !== limits.diameterMin ||
+        parseNumber(element("diameter-max").value) !== limits.diameterMax || parseNumber(element("length-min").value) !== limits.lengthMin ||
+        parseNumber(element("length-max").value) !== limits.lengthMax)
     {
         return true;
     }

@@ -10,6 +10,7 @@
     <script src="app.js" defer></script>
     <script src="locations.js" defer></script>
     <script src="exchange.js" defer></script>
+    <script src="improvements.js" defer></script>
     <script src="offline.js" defer></script>
 </head>
 <body>
@@ -26,7 +27,8 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.0.0</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.1.0</span></small></div>
+        <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
 
         <section class="lists-card card" aria-labelledby="lists-heading">
             <div class="section-top"><div><p class="eyebrow">VERKAUFSSORTIMENTE</p><h2 id="lists-heading">Meine Holzlisten</h2></div><span class="section-icon" aria-hidden="true">≡</span></div>
@@ -64,12 +66,19 @@
                     <div><label class="field-label" for="diameter">Mittendurchmesser <span>MD</span></label><div class="unit-field"><input id="diameter" inputmode="decimal" autocomplete="off" placeholder="0" aria-describedby="diameter-unit"><span id="diameter-unit">cm</span></div></div>
                 </div>
                 <div class="quick-row"><span>Schnellwahl Länge</span><div class="quick-buttons" aria-label="Länge auswählen"><button type="button" data-length="4">4 m</button><button type="button" data-length="5">5 m</button><button type="button" data-length="6">6 m</button></div></div>
+                <div class="quick-row"><span>Schnellwahl MD</span><div class="quick-buttons" aria-label="Mittendurchmesser auswählen"><button type="button" data-diameter="20">20 cm</button><button type="button" data-diameter="30">30 cm</button><button type="button" data-diameter="40">40 cm</button><button type="button" data-diameter="50">50 cm</button></div></div>
                 <fieldset class="grades"><legend>Güte</legend><div class="grade-grid"><button type="button" data-grade="A" aria-pressed="false">A</button><button type="button" data-grade="B" aria-pressed="false">B</button><button type="button" data-grade="C" aria-pressed="false">C</button><button type="button" data-grade="D" aria-pressed="false">D</button><button type="button" data-grade="K" aria-pressed="false">K</button></div></fieldset>
                 <div class="entry-preview"><span>Volumen dieses Stamms <small>Zylinderformel</small></span><strong id="entry-volume">– <small>fm</small></strong></div>
                 <p id="form-error" class="form-error" role="alert" hidden></p>
                 <button class="primary-button" id="submit-entry" type="submit"><span class="plus" aria-hidden="true">＋</span><span>Stamm speichern</span><span class="button-arrow" aria-hidden="true">→</span></button>
                 <button class="text-button cancel-edit" id="cancel-edit" type="button" hidden>Bearbeitung abbrechen</button>
             </form>
+            <details class="capture-settings"><summary>Erfassung und Hinweisgrenzen einstellen</summary>
+                <label class="field-label" for="next-focus">Nach dem Speichern weiter bei</label><select id="next-focus"><option value="diameter">Mittendurchmesser</option><option value="length">Länge</option></select>
+                <p class="list-hint">Außerhalb dieser Grenzen fragt ForstWerk vor dem Speichern nach. Du kannst die Werte trotzdem übernehmen.</p>
+                <div class="limits-grid"><div><label class="field-label" for="diameter-min">MD ab (cm)</label><input id="diameter-min" inputmode="decimal"></div><div><label class="field-label" for="diameter-max">MD bis (cm)</label><input id="diameter-max" inputmode="decimal"></div><div><label class="field-label" for="length-min">Länge ab (m)</label><input id="length-min" inputmode="decimal"></div><div><label class="field-label" for="length-max">Länge bis (m)</label><input id="length-max" inputmode="decimal"></div></div>
+                <button type="button" id="save-settings">Einstellungen speichern</button><p id="settings-status" role="status"></p>
+            </details>
         </section>
 
         <section class="overview card" aria-labelledby="overview-heading">
@@ -78,6 +87,7 @@
             <div class="list-heading"><h3>Erfasste Stämme</h3><span id="list-count">0 Einträge</span></div>
             <div id="empty-state" class="empty-state"><div class="empty-icon" aria-hidden="true">＋</div><strong>Noch keine Stämme erfasst</strong><p>Dein erster Stamm erscheint hier.</p></div>
             <ul id="entries" class="entry-list" aria-label="Erfasste Stämme"></ul>
+            <details class="summary-panel"><summary>Auswertung nach Holzart, Güte und Sortiment</summary><div id="summary-content"></div></details>
             <p class="footnote">Volumen rechnerisch nach der Zylinderformel. Angaben vor dem Verkauf prüfen.</p>
         </section>
         <section class="exchange-card card" aria-labelledby="exchange-heading">

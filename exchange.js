@@ -58,14 +58,14 @@ function csvCell(value)
 function groupsForList(list)
 {
     const groups = [];
-    list.entries.forEach((entry, index) => {
+    list.entries.forEach((entry) => {
         let group = groups.find((item) => item.polter === entry.polter && item.assortment === entry.assortment);
         if (!group)
         {
             group = {polter : entry.polter, assortment : entry.assortment, entries : []};
             groups.push(group);
         }
-        group.entries.push({entry, number : index + 1});
+        group.entries.push({entry, number : entry.number});
     });
     if (!groups.length)
     {
@@ -167,7 +167,7 @@ function validImport(data)
         }
         listIds.add(list.id);
         const entryIds = new Set();
-        return list.entries.every((entry) => {
+        const validEntries = list.entries.every((entry) => {
             if (!entry || typeof entry.id !== "string" || !entry.id || entryIds.has(entry.id) ||
                 typeof entry.polter !== "string" || typeof entry.species !== "string" ||
                 typeof entry.assortment !== "string" || !["A", "B", "C", "D", "K"].includes(entry.grade) ||
@@ -179,6 +179,19 @@ function validImport(data)
             entryIds.add(entry.id);
             return true;
         });
+        if (!validEntries)
+        {
+            return false;
+        }
+        try
+        {
+            normalizeNumbers(list);
+            return true;
+        }
+        catch (error)
+        {
+            return false;
+        }
     });
 }
 
