@@ -1,6 +1,6 @@
 "use strict";
 
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 const CACHE_NAME = `forstwerk-app-${VERSION}`;
 const FILES = ["./", "./index.html", "./style.css", "./app.js", "./locations.js",
     "./exchange.js", "./improvements.js", "./offline.js", "./manifest.webmanifest"];

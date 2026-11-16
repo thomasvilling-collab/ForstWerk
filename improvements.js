@@ -71,14 +71,6 @@ function showSettings()
     element("length-max").value = String(limits.lengthMax).replace(".", ",");
 }
 
-document.querySelectorAll("[data-diameter]").forEach((button) => {
-    button.addEventListener("click", () => {
-        fields.diameter.value = button.dataset.diameter;
-        fields.diameter.removeAttribute("aria-invalid");
-        setVolume();
-        fields.diameter.focus({preventScroll : true});
-    });
-});
 element("save-settings").addEventListener("click", () => {
     const candidate = {diameterMin : parseNumber(element("diameter-min").value),
         diameterMax : parseNumber(element("diameter-max").value),
