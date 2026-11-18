@@ -13,16 +13,17 @@ function isPrivateIpv4(hostname)
         (first === 192 && second === 168);
 }
 
-function lanProbeUrl(address, code)
+function lanProbeUrl(address, code, path = "/forstwerk-test")
 {
     const trimmed = address.trim();
     const url = new URL(trimmed.includes("://") ? trimmed : `http://${trimmed}`);
     if (url.protocol !== "http:" || !isPrivateIpv4(url.hostname) || !url.port ||
-        url.username || url.password || !/^([0-9a-f]{8})$/i.test(code))
+        url.username || url.password || !/^([0-9a-f]{16})$/i.test(code) ||
+        !["/forstwerk-test", "/forstwerk-import"].includes(path))
     {
-        throw new Error("Bitte eine private IPv4-Adresse mit Port und den achtstelligen Testcode eingeben.");
+        throw new Error("Bitte eine private IPv4-Adresse mit Port und den 16-stelligen Code eingeben.");
     }
-    const result = new URL(`/forstwerk-test?code=${code.toLowerCase()}`, url.origin);
+    const result = new URL(`${path}?code=${code.toLowerCase()}`, url.origin);
     return result.toString();
 }
 
@@ -32,13 +33,13 @@ function decodeLanQr(value)
     {
         const url = new URL(value);
         const code = url.searchParams.get("code") || "";
-        if (url.pathname !== "/forstwerk-test" || url.username || url.password ||
+        if (!["/forstwerk-test", "/forstwerk-import"].includes(url.pathname) || url.username || url.password ||
             url.searchParams.getAll("code").length !== 1)
         {
             return null;
         }
         const endpoint = lanProbeUrl(url.toString(), code);
-        return {address : new URL(endpoint).origin, code : code.toLowerCase()};
+        return {address : new URL(endpoint).origin, code : code.toLowerCase(), path : url.pathname};
     }
     catch (error)
     {
@@ -97,14 +98,14 @@ function readLanFrame(timestamp)
                 if (parsed)
                 {
                     element("lan-address").value = parsed.address;
+                    element("lan-address").dataset.scannedPath = parsed.path;
                     element("lan-code").value = parsed.code;
                     element("lan-test-status").textContent = "";
-                    element("lan-diagnostic").hidden = true;
                     stopLanScan();
-                    element("lan-scan-status").textContent = "QR-Code erkannt. Zum Testen bitte auf „Verbindung prüfen“ tippen.";
+                    element("lan-scan-status").textContent = "QR-Code für den WLAN-Empfang erkannt. Zum Übertragen auf „Ausgewählte Holzliste(n) senden“ tippen.";
                     return;
                 }
-                element("lan-scan-status").textContent = "Dieser QR-Code enthält keine gültige BelegWerk-Testadresse.";
+                element("lan-scan-status").textContent = "Dieser QR-Code enthält keine gültige BelegWerk-WLAN-Adresse.";
             }
         }
         catch (error)
@@ -171,60 +172,70 @@ for (const field of [element("lan-address"), element("lan-code")])
 {
     field.addEventListener("input", () => {
         element("lan-test-status").textContent = "";
-        element("lan-diagnostic").hidden = true;
+        if (field.id === "lan-address")
+        {
+            delete field.dataset.scannedPath;
+        }
     });
 }
 
-element("lan-test-button").addEventListener("click", async () => {
+element("lan-send-button").addEventListener("click", () => {
     const status = element("lan-test-status");
-    const diagnostic = element("lan-diagnostic");
-    diagnostic.hidden = true;
     let endpoint;
+    let payload;
     try
     {
-        const address = element("lan-address").value;
-        let code = element("lan-code").value.trim();
+        const addressField = element("lan-address");
+        const address = addressField.value;
+        const code = element("lan-code").value.trim();
+        if (addressField.dataset.scannedPath && addressField.dataset.scannedPath !== "/forstwerk-import")
+        {
+            throw new Error("Bitte den QR-Code aus „Per WLAN empfangen …“ im gewünschten BelegWerk-Dokument scannen.");
+        }
         if (!code && address.includes("?"))
         {
-            code = new URL(address.trim()).searchParams.get("code") || "";
-            element("lan-code").value = code;
+            const scanned = new URL(address.trim());
+            if (scanned.pathname !== "/forstwerk-import")
+            {
+                throw new Error("Bitte den WLAN-Empfang in BelegWerk öffnen und dessen QR-Code scannen.");
+            }
+            element("lan-code").value = scanned.searchParams.get("code") || "";
         }
-        endpoint = lanProbeUrl(address, code);
+        const effectiveCode = element("lan-code").value.trim();
+        endpoint = lanProbeUrl(address, effectiveCode, "/forstwerk-import");
+        if (!canExport())
+        {
+            return;
+        }
+        save();
+        const data = {format : exchangeFormat, version : 2, exportedAt : new Date().toISOString(), lists : selectedLists(), nextByPolter};
+        payload = JSON.stringify(data);
+        if (new Blob([payload]).size > 10 * 1024 * 1024)
+        {
+            throw new Error("Die ausgewählten Holzlisten sind größer als 10 MB.");
+        }
     }
     catch (error)
     {
-        status.textContent = "Bitte eine Adresse wie 192.168.1.20:54321 und den achtstelligen Testcode aus BelegWerk eingeben.";
+        status.textContent = error.message || "Bitte die WLAN-Adresse und den 16-stelligen Code aus BelegWerk prüfen.";
         return;
     }
-    diagnostic.href = endpoint;
-    diagnostic.hidden = false;
-    const button = element("lan-test-button");
-    button.disabled = true;
-    status.textContent = "Verbindung wird geprüft …";
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    try
-    {
-        const response = await fetch(endpoint, {method : "GET", mode : "cors", cache : "no-store", signal : controller.signal});
-        if (!response.ok)
-        {
-            throw new Error("HTTP-Fehler");
-        }
-        const data = await response.json();
-        if (!data || data.service !== "belegwerk-connect-test" ||
-            data.code !== element("lan-code").value.trim().toLowerCase())
-        {
-            throw new Error("Ungültige Antwort");
-        }
-        status.textContent = "Verbindung erfolgreich: ForstWerk hat den Testdienst von BelegWerk erreicht.";
-    }
-    catch (error)
-    {
-        status.textContent = "Keine direkte Verbindung. Prüfe WLAN, Adresse, Testcode und Windows-Firewall. Der Browser kann zudem den Zugriff von HTTPS auf lokales HTTP blockieren. Die Testadresse unten hilft bei der Eingrenzung.";
-    }
-    finally
-    {
-        clearTimeout(timeout);
-        button.disabled = false;
-    }
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = endpoint;
+    form.enctype = "application/x-www-form-urlencoded";
+    form.target = "_blank";
+    form.referrerPolicy = "no-referrer";
+    form.setAttribute("rel", "noopener noreferrer");
+    form.hidden = true;
+    const field = document.createElement("input");
+    field.type = "hidden";
+    field.name = "payload";
+    field.value = payload;
+    form.append(field);
+    document.body.append(form);
+    status.textContent = "Holzliste wird an BelegWerk gesendet … Die Empfangsbestätigung erscheint in einem neuen Fenster.";
+    form.submit();
+    form.remove();
 });
