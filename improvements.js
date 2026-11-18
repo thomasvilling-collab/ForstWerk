@@ -34,19 +34,21 @@ function renderSummary()
 {
     const target = element("summary-content");
     target.replaceChildren();
-    if (!entries.length)
+    const reviewed = entries.filter(hasBark);
+    if (!reviewed.length)
     {
-        appendText(target, "p", "Noch keine Stämme für die Auswertung vorhanden.", "list-hint");
+        appendText(target, "p", "Noch keine Stämme mit geprüftem Rindenabzug für die Auswertung vorhanden.", "list-hint");
         return;
     }
-    [["Holzart", "species"], ["Güte", "grade"], ["Sortiment", "assortment"]].forEach(([title, key]) => {
+    [["Stärkeklasse", "strength"], ["Holzart", "species"], ["Güte", "grade"], ["Sortiment", "assortment"]].forEach(([title, key]) => {
         appendText(target, "h3", title);
         const groups = new Map();
-        entries.forEach((entry) => {
-            const current = groups.get(entry[key]) || {count : 0, volume : 0};
+        reviewed.forEach((entry) => {
+            const name = key === "strength" ? strengthClass(netDiameter(entry)) : entry[key];
+            const current = groups.get(name) || {count : 0, volume : 0};
             current.count++;
-            current.volume += volumeOf(entry.diameter, entry.length);
-            groups.set(entry[key], current);
+            current.volume += stemVolume(entry);
+            groups.set(name, current);
         });
         const table = document.createElement("table");
         table.className = "summary-table";
@@ -60,7 +62,98 @@ function renderSummary()
             });
         target.append(table);
     });
+    appendText(target, "h3", "Stärke · Holzart · Güte · Sortiment");
+    const table = document.createElement("table");
+    table.className = "summary-table";
+    const header = table.createTHead().insertRow();
+    ["Sortierung", "Stämme", "fm"].forEach((label) => appendText(header, "th", label));
+    const body = table.createTBody();
+    pricingTotals(reviewed).forEach((total) => {
+        const row = body.insertRow();
+        [total.values.join(" · "), String(total.count), formatter.format(total.volume)]
+            .forEach((value) => appendText(row, "td", value));
+    });
+    target.append(table);
 }
+
+function renderBarkReview()
+{
+    const pending = entries.filter((entry) => !hasBark(entry));
+    element("review-bark").hidden = !pending.length;
+    if (!pending.length)
+    {
+        element("review-bark").open = false;
+    }
+    const target = element("review-bark-rows");
+    target.replaceChildren();
+    pending.forEach((entry) => {
+        const row = document.createElement("div");
+        row.className = "review-bark-row";
+        row.dataset.id = entry.id;
+        const label = document.createElement("label");
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        label.append(check);
+        const text = document.createElement("span");
+        text.textContent = `Stamm ${entry.number} · ${entry.species} · MD ${entry.diameter.toLocaleString("de-DE")} cm`;
+        label.append(text);
+        const input = document.createElement("input");
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.setAttribute("aria-label", `Rindenabzug in cm für Stamm ${entry.number}`);
+        input.placeholder = "Abzug cm";
+        const suggestion = suggestedBark(entry.species, entry.diameter);
+        input.value = suggestion === null ? "" : String(suggestion);
+        row.append(label, input);
+        target.append(row);
+    });
+}
+
+element("select-bark").addEventListener("click", () => {
+    element("review-bark-rows").querySelectorAll('input[type="checkbox"]').forEach((box) => {
+        box.checked = true;
+    });
+});
+element("apply-bark").addEventListener("click", () => {
+    if (editingId || fields.diameter.value.trim())
+    {
+        element("review-bark-status").textContent = "Bitte die begonnene Stammerfassung zuerst speichern oder abbrechen.";
+        return;
+    }
+    const updates = [];
+    const rows = element("review-bark-rows").querySelectorAll(".review-bark-row");
+    for (const row of rows)
+    {
+        if (!row.querySelector('input[type="checkbox"]').checked)
+        {
+            continue;
+        }
+        const entry = entries.find((item) => item.id === row.dataset.id);
+        const bark = parseBark(row.querySelector('input[type="text"]').value);
+        if (!entry || bark === null || bark >= entry.diameter)
+        {
+            element("review-bark-status").textContent = "Bitte für jeden markierten Stamm einen gültigen Abzug kleiner als den Mittendurchmesser eingeben.";
+            return;
+        }
+        updates.push({entry, bark});
+    }
+    if (!updates.length)
+    {
+        element("review-bark-status").textContent = "Bitte mindestens einen Stamm markieren.";
+        return;
+    }
+    if (!window.confirm(`Rindenabzug für ${updates.length} Stämme übernehmen und Festmeter neu berechnen?`))
+    {
+        return;
+    }
+    updates.forEach((update) => {
+        update.entry.barkDeductionCm = update.bark;
+    });
+    save();
+    render();
+    element("review-bark-status").textContent = storageAvailable && !storageBlocked ?
+        `${updates.length} Stämme umgestellt.` : "Änderung nur vorübergehend vorhanden; Speicherung fehlgeschlagen.";
+});
 
 function showSettings()
 {
@@ -93,7 +186,7 @@ element("backup-all").addEventListener("click", () => {
         return;
     }
     save();
-    const data = {format : exchangeFormat, version : 1, exportedAt : new Date().toISOString(), lists};
+    const data = {format : exchangeFormat, version : 2, exportedAt : new Date().toISOString(), lists};
     const now = new Date();
     const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     downloadFile(`ForstWerk-Sicherung-${day}.json`, JSON.stringify(data, null, 2), "application/json;charset=utf-8");
@@ -110,4 +203,5 @@ element("backup-all").addEventListener("click", () => {
 });
 showSettings();
 renderSummary();
+renderBarkReview();
 updateBackupReminder();

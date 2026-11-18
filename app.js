@@ -7,7 +7,8 @@ const fields = {
     species : element("species"),
     assortment : element("assortment"),
     diameter : element("diameter"),
-    length : element("length")
+    length : element("length"),
+    bark : element("bark")
 };
 const form = element("entry-form");
 const gradeButtons = Array.from(document.querySelectorAll("[data-grade]"));
@@ -146,7 +147,7 @@ function switchList(id)
     {
         return false;
     }
-    if ((editingId || fields.diameter.value.trim()) &&
+    if ((editingId || fields.diameter.value.trim() || element("review-bark").open) &&
         !window.confirm("Die ungespeicherte Stammbearbeitung verwerfen und die Liste wechseln?"))
     {
         updateListSelect();
@@ -178,6 +179,72 @@ function volumeOf(diameterCm, lengthM)
 {
     const diameterM = diameterCm / 100;
     return Math.PI * diameterM * diameterM * lengthM / 4;
+}
+
+function parseBark(value)
+{
+    const text = value.trim();
+    if (!/^\d+(?:[.,]\d+)?$/.test(text))
+    {
+        return null;
+    }
+    const result = Number(text.replace(",", "."));
+    return Number.isFinite(result) && result >= 0 ? result : null;
+}
+
+function suggestedBark(species, diameter)
+{
+    if (!diameter || !Number.isFinite(diameter))
+    {
+        return null;
+    }
+    const measured = Math.floor(diameter);
+    switch (species)
+    {
+    case "Fichte":
+        return measured <= 26 ? 1 : measured <= 50 ? 2 : 3;
+    case "Tanne":
+        return measured <= 22 ? 1 : measured <= 38 ? 2 : measured <= 55 ? 3 : 4;
+    case "Douglasie":
+        return measured <= 20 ? 1 : measured <= 37 ? 2 : measured <= 53 ? 3 : measured <= 70 ? 4 : 5;
+    case "Buche":
+        return measured <= 41 ? 1 : 2;
+    case "Esche":
+        return measured <= 18 ? 1 : measured <= 29 ? 2 : measured <= 44 ? 3 : 4;
+    default:
+        return null;
+    }
+}
+
+function hasBark(entry)
+{
+    return Number.isFinite(entry.barkDeductionCm) && entry.barkDeductionCm >= 0 &&
+        entry.barkDeductionCm < entry.diameter;
+}
+
+function netDiameter(entry)
+{
+    return hasBark(entry) ? entry.diameter - entry.barkDeductionCm : null;
+}
+
+function stemVolume(entry)
+{
+    const diameter = netDiameter(entry);
+    return diameter === null ? null : volumeOf(diameter, entry.length);
+}
+
+function updateBarkSuggestion()
+{
+    if (fields.bark.dataset.manual === "true")
+    {
+        element("bark-hint").textContent = "Manuell eingegebenen Abzug bitte für diese Holzart und diesen Stamm prüfen.";
+        return;
+    }
+    const proposal = suggestedBark(fields.species.value, parseNumber(fields.diameter.value));
+    fields.bark.value = proposal === null ? "" : String(proposal);
+    element("bark-hint").textContent = proposal === null ?
+        "Bitte Rindenabzug für diese Holzart selbst eingeben." :
+        "Vorschlag nach Holzart und Durchmesser; vor dem Speichern prüfen und bei Bedarf ändern.";
 }
 
 function setGrade(value)
@@ -261,7 +328,8 @@ function restore()
                        [ "A", "B", "C", "D", "K" ].includes(entry.grade) &&
                        typeof entry.diameter === "number" && entry.diameter > 0 &&
                        Number.isFinite(entry.diameter) && typeof entry.length === "number" &&
-                       entry.length > 0 && Number.isFinite(entry.length));
+                       entry.length > 0 && Number.isFinite(entry.length) &&
+                       (entry.barkDeductionCm === undefined || hasBark(entry)));
             if (validEntries.length !== list.entries.length)
             {
                 throw new Error("Ungültige Stammdaten");
@@ -299,12 +367,17 @@ function setVolume()
 {
     const diameter = parseNumber(fields.diameter.value);
     const length = parseNumber(fields.length.value);
+    const bark = parseBark(fields.bark.value);
+    const adjusted = diameter && bark !== null && bark < diameter ? diameter - bark : null;
     const target = element("entry-volume");
     target.replaceChildren(document.createTextNode(
-        diameter && length ? formatter.format(volumeOf(diameter, length)) + " " : "– "));
+        adjusted && length ? formatter.format(volumeOf(adjusted, length)) + " " : "– "));
     const unit = document.createElement("small");
     unit.textContent = "fm";
     target.append(unit);
+    element("strength-preview").textContent = adjusted ?
+        `MD ohne Rinde: ${adjusted.toLocaleString("de-DE")} cm · Stärkeklasse: ${strengthClass(adjusted)}` :
+        "Stärkeklasse: –";
 }
 
 function render()
@@ -313,7 +386,11 @@ function render()
     list.replaceChildren();
     let volume = 0;
     entries.forEach((entry, index) => {
-        volume += volumeOf(entry.diameter, entry.length);
+        const adjustedVolume = stemVolume(entry);
+        if (adjustedVolume !== null)
+        {
+            volume += adjustedVolume;
+        }
         const item = document.createElement("li");
         item.className = "entry-item";
         const badge = document.createElement("span");
@@ -322,12 +399,13 @@ function render()
         const detail = document.createElement("div");
         detail.className = "entry-details";
         const title = document.createElement("strong");
-        title.textContent = `${entry.species} · Güte ${entry.grade}`;
+        title.textContent = `${entry.species} · Güte ${entry.grade} · ${hasBark(entry) ? `Stärke ${strengthClass(netDiameter(entry))}` : "Rindenabzug prüfen"}`;
         const subtitle = document.createElement("span");
         subtitle.textContent = `${entry.polter} · ${entry.assortment} · MD ${
             entry.diameter.toLocaleString(
                 "de-DE")} cm · ${entry.length.toLocaleString("de-DE")} m · ${
-            formatter.format(volumeOf(entry.diameter, entry.length))} fm`;
+            adjustedVolume !== null ? formatter.format(adjustedVolume) + " fm o.R." :
+                formatter.format(volumeOf(entry.diameter, entry.length)) + " fm m.R. (ungeprüft)"}`;
         detail.append(title, subtitle);
         const actions = document.createElement("div");
         actions.className = "entry-actions";
@@ -357,12 +435,19 @@ function render()
     element("list-count").textContent =
         `${entries.length} ${entries.length === 1 ? "Eintrag" : "Einträge"}`;
     element("empty-state").hidden = entries.length > 0;
+    const unreviewed = entries.filter((entry) => !hasBark(entry)).length;
+    element("unreviewed-note").hidden = !unreviewed;
+    element("unreviewed-note").textContent = `${unreviewed} ${unreviewed === 1 ? "Stamm benötigt" : "Stämme benötigen"} einen geprüften Rindenabzug und fehlen in der Summe ohne Rinde.`;
     element("next-number").textContent =
         editingId ? `STAMM ${entries.find((item) => item.id === editingId).number} BEARBEITEN` :
             `STAMM ${String(activeListNumber()).padStart(2, "0")}`;
     if (typeof renderSummary === "function")
     {
         renderSummary();
+    }
+    if (typeof renderBarkReview === "function")
+    {
+        renderBarkReview();
     }
     setVolume();
     updateLengthButtons();
@@ -381,6 +466,9 @@ function startEdit(id)
     fields.assortment.value = entry.assortment;
     fields.diameter.value = String(entry.diameter).replace(".", ",");
     fields.length.value = String(entry.length).replace(".", ",");
+    fields.bark.dataset.manual = hasBark(entry) ? "true" : "false";
+    fields.bark.value = hasBark(entry) ? String(entry.barkDeductionCm).replace(".", ",") : "";
+    updateBarkSuggestion();
     setGrade(entry.grade);
     if (typeof refreshLocation === "function")
     {
@@ -400,6 +488,8 @@ function finishEdit()
     element("submit-entry").querySelector("span:nth-child(2)").textContent = "Stamm speichern";
     element("cancel-edit").hidden = true;
     fields.diameter.value = "";
+    fields.bark.value = "";
+    fields.bark.dataset.manual = "false";
     clearErrors();
     render();
 }
@@ -429,8 +519,15 @@ function clearErrors()
 form.addEventListener("submit", (event) => {
     event.preventDefault();
     clearErrors();
+    if (element("review-bark").open)
+    {
+        element("form-error").textContent = "Bitte zuerst die Prüfung der bisherigen Stämme abschließen und schließen.";
+        element("form-error").hidden = false;
+        return;
+    }
     const diameter = parseNumber(fields.diameter.value);
     const length = parseNumber(fields.length.value);
+    const bark = parseBark(fields.bark.value);
     const missing = [];
     if (!fields.polter.value.trim())
     {
@@ -451,6 +548,10 @@ form.addEventListener("submit", (event) => {
     if (!length || length > 1000)
     {
         missing.push([ fields.length, "gültige Länge" ]);
+    }
+    if (bark === null || !diameter || bark >= diameter)
+    {
+        missing.push([fields.bark, "gültigen Rindenabzug"]);
     }
     if (!grade)
     {
@@ -488,6 +589,7 @@ form.addEventListener("submit", (event) => {
         assortment : fields.assortment.value,
         diameter,
         length,
+        barkDeductionCm : bark,
         grade
     };
     if (index >= 0)
@@ -520,6 +622,15 @@ lengthButtons.forEach((button) => button.addEventListener("click", () => {
 Object.values(fields).forEach((field) => {
     field.addEventListener("input", () => {
         field.removeAttribute("aria-invalid");
+        if (field === fields.bark)
+        {
+            fields.bark.dataset.manual = "true";
+            updateBarkSuggestion();
+        }
+        if (field === fields.diameter || field === fields.species)
+        {
+            updateBarkSuggestion();
+        }
         setVolume();
         updateLengthButtons();
         if (field !== fields.diameter)

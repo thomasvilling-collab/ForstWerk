@@ -74,6 +74,33 @@ function groupsForList(list)
     return groups;
 }
 
+function strengthTotals(records)
+{
+    const totals = new Map();
+    records.filter(hasBark).forEach((entry) => {
+        const label = strengthClass(netDiameter(entry));
+        const total = totals.get(label) || {count : 0, volume : 0};
+        total.count++;
+        total.volume += stemVolume(entry);
+        totals.set(label, total);
+    });
+    return Array.from(totals.entries()).sort((a, b) => a[0].localeCompare(b[0], "de"));
+}
+
+function pricingTotals(records)
+{
+    const groups = new Map();
+    records.filter(hasBark).forEach((entry) => {
+        const key = JSON.stringify([strengthClass(netDiameter(entry)), entry.species, entry.grade, entry.assortment]);
+        const total = groups.get(key) || {count : 0, volume : 0};
+        total.count++;
+        total.volume += stemVolume(entry);
+        groups.set(key, total);
+    });
+    return Array.from(groups.entries()).map(([key, total]) => ({values : JSON.parse(key), ...total}))
+        .sort((a, b) => a.values.join(" ").localeCompare(b.values.join(" "), "de"));
+}
+
 function exportCsv()
 {
     const rows = [];
@@ -88,15 +115,29 @@ function exportCsv()
                 rows.push(["Breitengrad", location.latitude]);
                 rows.push(["Längengrad", location.longitude]);
             }
-            rows.push(["Nr.", "Holzart", "Güte", "Länge (m)", "MD (cm)", "Volumen (fm)"]);
+            rows.push(["Nr.", "Holzart", "Güte", "Länge (m)", "MD m.R. (cm)", "Rindenabzug (cm)", "Stärke", "Volumen (fm o.R.)"]);
             group.entries.forEach(({entry, number}) => {
+                const volume = stemVolume(entry);
                 rows.push([number, entry.species, entry.grade, String(entry.length).replace(".", ","),
-                    String(entry.diameter).replace(".", ","), formatter.format(volumeOf(entry.diameter, entry.length))]);
+                    String(entry.diameter).replace(".", ","), hasBark(entry) ? entry.barkDeductionCm : "",
+                    hasBark(entry) ? strengthClass(netDiameter(entry)) : "ungeprüft",
+                    volume === null ? "" : formatter.format(volume)]);
             });
-            const total = group.entries.reduce((sum, item) => sum + volumeOf(item.entry.diameter, item.entry.length), 0);
-            rows.push(["Summe", "", "", "", "", formatter.format(total)]);
+            const total = group.entries.reduce((sum, item) => sum + (stemVolume(item.entry) || 0), 0);
+            rows.push(["Summe geprüft", "", "", "", "", "", "", formatter.format(total)]);
             rows.push([]);
         });
+        rows.push(["Stärkeklasse", "Stämme", "fm ohne Rinde"]);
+        strengthTotals(list.entries).forEach(([label, total]) => {
+            rows.push([label, total.count, formatter.format(total.volume)]);
+        });
+        rows.push([]);
+        rows.push(["Stärke", "Holzart", "Güte", "Sortiment", "Stämme", "fm ohne Rinde"]);
+        pricingTotals(list.entries).forEach((total) => {
+            rows.push([...total.values, total.count, formatter.format(total.volume)]);
+        });
+        rows.push(["Ungeprüfte Stämme", list.entries.filter((entry) => !hasBark(entry)).length]);
+        rows.push([]);
     });
     return "\ufeff" + rows.map((row) => row.map(csvCell).join(";")).join("\r\n") + "\r\n";
 }
@@ -122,7 +163,8 @@ function preparePrint()
         section.className = "print-list";
         appendText(section, "p", "FORSTWERK · HOLZAUFNAHME", "print-brand");
         appendText(section, "h1", list.name);
-        appendText(section, "p", `${list.entries.length} ${list.entries.length === 1 ? "Stamm" : "Stämme"} · Gesamtvolumen: ${formatter.format(list.entries.reduce((sum, entry) => sum + volumeOf(entry.diameter, entry.length), 0))} fm`);
+        const pending = list.entries.filter((entry) => !hasBark(entry)).length;
+        appendText(section, "p", `${list.entries.length} ${list.entries.length === 1 ? "Stamm" : "Stämme"} · Geprüftes Volumen: ${formatter.format(list.entries.reduce((sum, entry) => sum + (stemVolume(entry) || 0), 0))} fm o.R.${pending ? ` · ${pending} ungeprüft` : ""}`);
         groupsForList(list).forEach((group) => {
             const groupSection = document.createElement("div");
             groupSection.className = "print-group";
@@ -134,26 +176,48 @@ function preparePrint()
             }
             const table = document.createElement("table");
             const header = table.createTHead().insertRow();
-            ["Nr.", "Holzart", "Güte", "Länge m", "MD cm", "fm"].forEach((label) => appendText(header, "th", label));
+            ["Nr.", "Holzart", "Güte", "Länge m", "MD m.R.", "Abzug cm", "Stärke", "fm o.R."].forEach((label) => appendText(header, "th", label));
             const body = table.createTBody();
             group.entries.forEach(({entry, number}) => {
                 const row = body.insertRow();
                 [number, entry.species, entry.grade, entry.length.toLocaleString("de-DE"),
-                    entry.diameter.toLocaleString("de-DE"), formatter.format(volumeOf(entry.diameter, entry.length))].forEach((value) => appendText(row, "td", String(value)));
+                    entry.diameter.toLocaleString("de-DE"), hasBark(entry) ? entry.barkDeductionCm.toLocaleString("de-DE") : "–",
+                    hasBark(entry) ? strengthClass(netDiameter(entry)) : "ungeprüft",
+                    hasBark(entry) ? formatter.format(stemVolume(entry)) : "–"].forEach((value) => appendText(row, "td", String(value)));
             });
             groupSection.append(table);
-            const total = group.entries.reduce((sum, item) => sum + volumeOf(item.entry.diameter, item.entry.length), 0);
-            appendText(groupSection, "p", `Summe: ${formatter.format(total)} fm`, "print-group-total");
+            const total = group.entries.reduce((sum, item) => sum + (stemVolume(item.entry) || 0), 0);
+            appendText(groupSection, "p", `Summe geprüft: ${formatter.format(total)} fm o.R.`, "print-group-total");
             section.append(groupSection);
         });
-        appendText(section, "p", "Volumen rechnerisch nach der Zylinderformel. Angaben vor dem Verkauf prüfen.", "print-note");
+        appendText(section, "h2", "Stärkeklassen · geprüfte Stämme", "print-strength-heading");
+        const summary = document.createElement("table");
+        const summaryHeader = summary.createTHead().insertRow();
+        ["Stärkeklasse", "Stämme", "fm ohne Rinde"].forEach((label) => appendText(summaryHeader, "th", label));
+        const summaryBody = summary.createTBody();
+        strengthTotals(list.entries).forEach(([label, total]) => {
+            const row = summaryBody.insertRow();
+            [label, String(total.count), formatter.format(total.volume)].forEach((value) => appendText(row, "td", value));
+        });
+        section.append(summary);
+        appendText(section, "h2", "Stärke, Holzart, Güte und Sortiment", "print-strength-heading");
+        const pricing = document.createElement("table");
+        const pricingHeader = pricing.createTHead().insertRow();
+        ["Stärke", "Holzart", "Güte", "Sortiment", "Stämme", "fm o.R."].forEach((label) => appendText(pricingHeader, "th", label));
+        const pricingBody = pricing.createTBody();
+        pricingTotals(list.entries).forEach((total) => {
+            const row = pricingBody.insertRow();
+            [...total.values, String(total.count), formatter.format(total.volume)].forEach((value) => appendText(row, "td", value));
+        });
+        section.append(pricing);
+        appendText(section, "p", "Durchmesser mit Rinde abzüglich geprüftem Rindenabzug. Volumen rechnerisch nach der Zylinderformel; Rundungs- und Vertragsregeln vor dem Verkauf prüfen.", "print-note");
         content.append(section);
     });
 }
 
 function validImport(data)
 {
-    if (!data || data.format !== exchangeFormat || data.version !== 1 || !Array.isArray(data.lists) || !data.lists.length)
+    if (!data || data.format !== exchangeFormat || ![1, 2].includes(data.version) || !Array.isArray(data.lists) || !data.lists.length)
     {
         return false;
     }
@@ -172,7 +236,8 @@ function validImport(data)
                 typeof entry.polter !== "string" || typeof entry.species !== "string" ||
                 typeof entry.assortment !== "string" || !["A", "B", "C", "D", "K"].includes(entry.grade) ||
                 !Number.isFinite(entry.diameter) || entry.diameter <= 0 || entry.diameter > 1000 ||
-                !Number.isFinite(entry.length) || entry.length <= 0 || entry.length > 1000)
+                !Number.isFinite(entry.length) || entry.length <= 0 || entry.length > 1000 ||
+                (entry.barkDeductionCm !== undefined && !hasBark(entry)))
             {
                 return false;
             }
@@ -256,7 +321,7 @@ element("export-json").addEventListener("click", () => {
         return;
     }
     save();
-    const data = {format : exchangeFormat, version : 1, exportedAt : new Date().toISOString(), lists : selectedLists()};
+    const data = {format : exchangeFormat, version : 2, exportedAt : new Date().toISOString(), lists : selectedLists()};
     downloadFile(exportName("json"), JSON.stringify(data, null, 2), "application/json;charset=utf-8");
 });
 element("export-csv").addEventListener("click", () => {

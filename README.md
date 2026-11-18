@@ -1,5 +1,13 @@
 # ForstWerk – erste Oberfläche
 
+## Stärkeklassen und Rindenabzug
+
+Der Mittendurchmesser wird mit Rinde eingegeben. Für Fichte, Tanne, Douglasie, Buche und Esche schlägt ForstWerk einen Rindenabzug vor (Anlage VII RVR 2024); dieser ist vor dem Speichern zu prüfen und kann überschrieben werden. Der Vorschlag verwendet den auf ganze Zentimeter abgerundeten Messwert zur Auswahl der Tabellenstufe. Für gemischte oder andere Holzarten ist der Abzug manuell einzugeben. Abzug 0 ist ausdrücklich möglich.
+
+Der eingegebene Messwert abzüglich des geprüften Abzugs ergibt den Durchmesser ohne Rinde. Dieser wird für die Klasse und die Zylinderformel verwendet; es gibt keine zusätzliche Rundung des Durchmessers für das angezeigte Volumen. Klassen: 0 unter 10 cm, 1a 10–unter 15, 1b 15–unter 20, 2a 20–unter 25, 2b 25–unter 30, 3a 30–unter 35, 3b 35–unter 40, 4 40–unter 50, 5 50–unter 60, 6 ab 60 cm. Eine vollständige RVR-Abrechnung einschließlich Längenübermaß, Mess- und Rundungsregeln ist nicht umgesetzt.
+
+Alte Stämme bleiben ohne Rindenabzug gespeichert, bis sie einzeln oder über „Bisherige Stämme auf Rindenabzug prüfen“ geprüft und bestätigt werden. Ungeprüfte Stämme stehen nicht in der Summe ohne Rinde und können in BelegWerk nicht preislich übernommen werden. Die Auswertung sowie CSV und PDF zeigen Stärkeklassen und Festmeter; zusätzlich gibt es eine Aufstellung nach Klasse, Holzart, Güte und Sortiment. Die JSON-Version 2 überträgt den geprüften Abzug. Ältere Version-1-Dateien bleiben einlesbar und gelten ohne Abzug als ungeprüft. Beim Update alle Programmdateien einschließlich `strength.js` hochladen.
+
 Diese erste Version zeigt die Stammholzaufnahme mit mehreren Holzlisten. Listen lassen sich anlegen, auswählen, umbenennen und löschen. Jede Liste enthält eigene Stämme und Voreinstellungen. Eine Aufnahme aus der ersten Version erscheint als „Holzliste 1“ und kann umbenannt werden. Die Eingaben werden lokal im Speicher des verwendeten Browsers gehalten. Sie sind an den jeweiligen Browser und die Adresse gebunden.
 
 ## Lokal am Windows-PC ausprobieren

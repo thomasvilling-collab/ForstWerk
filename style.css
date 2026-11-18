@@ -64,6 +64,13 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .entry-card { grid-column: 1; grid-row: 6; }
 .overview { grid-column: 2; grid-row: 5 / 7; }
 .capture-settings, .summary-panel { margin-top: 20px; border-top: 1px solid #e5ece4; padding-top: 15px; }
+.bark-row { margin-top: 14px; }
+.review-bark-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.review-bark-row label { display: flex; align-items: center; flex: 1; gap: 8px; font-size: 12px; }
+.review-bark-row input[type="checkbox"] { flex: none; width: 19px; height: 19px; }
+.review-bark-row input[type="text"] { width: 100px; flex: none; }
+#apply-bark { border: 1px solid #28694c; border-radius: 8px; background: #28694c; color: white; padding: 10px; font-weight: 700; }
+#review-bark-status { font-size: 12px; color: #496450; }
 .capture-settings summary, .summary-panel summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #315b40; margin-bottom: 14px; }
 .limits-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 0; }
 #settings-status { margin: 9px 0 0; font-size: 12px; color: #496450; }
@@ -153,6 +160,7 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 }
 @media print {
     @page { size: A4; margin: 15mm; }
+    :root { background: white; }
     html, body { background: white; color: #172b20; }
     body > :not(#print-content) { display: none !important; }
     #print-content { display: block; font-family: Arial, sans-serif; font-size: 10pt; }
@@ -166,6 +174,7 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
     .print-group-heading { font-weight: bold; margin-bottom: 3mm; break-after: avoid; }
     .print-location { margin: 0 0 3mm; font-size: 9pt; }
     .print-group-total { margin: 3mm 0; text-align: right; font-weight: bold; }
+    .print-strength-heading { margin-top: 7mm; font-size: 11pt; }
     .print-list tr { break-inside: avoid; }
     .print-note { margin-top: 6mm; font-size: 8pt; color: #64766a; }
 }

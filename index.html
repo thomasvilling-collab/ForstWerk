@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <title>ForstWerk · Holzaufnahme</title>
     <link rel="stylesheet" href="style.css">
+    <script src="strength.js" defer></script>
     <script src="app.js" defer></script>
     <script src="locations.js" defer></script>
     <script src="exchange.js" defer></script>
@@ -27,7 +28,7 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.1.1</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.2.0</span></small></div>
         <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
 
         <section class="lists-card card" aria-labelledby="lists-heading">
@@ -63,11 +64,12 @@
             <form id="entry-form" novalidate>
                 <div class="measure-grid">
                     <div><label class="field-label" for="length">Länge</label><div class="unit-field"><input id="length" inputmode="decimal" autocomplete="off" placeholder="0,0" aria-describedby="length-unit"><span id="length-unit">m</span></div></div>
-                    <div><label class="field-label" for="diameter">Mittendurchmesser <span>MD</span></label><div class="unit-field"><input id="diameter" inputmode="decimal" autocomplete="off" placeholder="0" aria-describedby="diameter-unit"><span id="diameter-unit">cm</span></div></div>
+                    <div><label class="field-label" for="diameter">Mittendurchmesser <span>mit Rinde</span></label><div class="unit-field"><input id="diameter" inputmode="decimal" autocomplete="off" placeholder="0" aria-describedby="diameter-unit"><span id="diameter-unit">cm</span></div></div>
                 </div>
+                <div class="bark-row"><label class="field-label" for="bark">Rindenabzug am Durchmesser (cm)</label><input id="bark" inputmode="decimal" placeholder="Bitte prüfen / eingeben" autocomplete="off"><p id="bark-hint" class="list-hint">Der Abzug gilt für Durchmesser und Festmeter ohne Rinde.</p><p id="strength-preview" class="list-hint">Stärkeklasse: –</p></div>
                 <div class="quick-row"><span>Schnellwahl Länge</span><div class="quick-buttons" aria-label="Länge auswählen"><button type="button" data-length="4">4 m</button><button type="button" data-length="5">5 m</button><button type="button" data-length="6">6 m</button></div></div>
                 <fieldset class="grades"><legend>Güte</legend><div class="grade-grid"><button type="button" data-grade="A" aria-pressed="false">A</button><button type="button" data-grade="B" aria-pressed="false">B</button><button type="button" data-grade="C" aria-pressed="false">C</button><button type="button" data-grade="D" aria-pressed="false">D</button><button type="button" data-grade="K" aria-pressed="false">K</button></div></fieldset>
-                <div class="entry-preview"><span>Volumen dieses Stamms <small>Zylinderformel</small></span><strong id="entry-volume">– <small>fm</small></strong></div>
+                <div class="entry-preview"><span>Volumen dieses Stamms <small>Zylinderformel ohne Rinde</small></span><strong id="entry-volume">– <small>fm</small></strong></div>
                 <p id="form-error" class="form-error" role="alert" hidden></p>
                 <button class="primary-button" id="submit-entry" type="submit"><span class="plus" aria-hidden="true">＋</span><span>Stamm speichern</span><span class="button-arrow" aria-hidden="true">→</span></button>
                 <button class="text-button cancel-edit" id="cancel-edit" type="button" hidden>Bearbeitung abbrechen</button>
@@ -82,11 +84,13 @@
 
         <section class="overview card" aria-labelledby="overview-heading">
             <div class="section-top"><div><p class="eyebrow">DEIN ÜBERBLICK</p><h2 id="overview-heading">Aufnahme bisher</h2></div><span class="live-badge"><span class="status-dot"></span> Aktuell</span></div>
-            <div class="stat-grid"><div><span>Stämme</span><strong id="count">0 <small>Stück</small></strong></div><div><span>Gesamtvolumen</span><strong id="volume">0,000 <small>fm</small></strong></div></div>
+            <div class="stat-grid"><div><span>Stämme</span><strong id="count">0 <small>Stück</small></strong></div><div><span>Volumen ohne Rinde</span><strong id="volume">0,000 <small>fm</small></strong></div></div>
+            <p id="unreviewed-note" class="list-hint" hidden></p>
+            <details id="review-bark" class="capture-settings" hidden><summary>Bisherige Stämme auf Rindenabzug prüfen</summary><p class="list-hint">Vorschläge prüfen oder Abzüge eingeben. Nur markierte Stämme werden umgestellt.</p><button type="button" id="select-bark" class="text-button">Alle markieren</button><div id="review-bark-rows"></div><button type="button" id="apply-bark">Markierte Stämme übernehmen</button><p id="review-bark-status" role="status"></p></details>
             <div class="list-heading"><h3>Erfasste Stämme</h3><span id="list-count">0 Einträge</span></div>
             <div id="empty-state" class="empty-state"><div class="empty-icon" aria-hidden="true">＋</div><strong>Noch keine Stämme erfasst</strong><p>Dein erster Stamm erscheint hier.</p></div>
             <ul id="entries" class="entry-list" aria-label="Erfasste Stämme"></ul>
-            <details class="summary-panel"><summary>Auswertung nach Holzart, Güte und Sortiment</summary><div id="summary-content"></div></details>
+            <details class="summary-panel"><summary>Auswertung nach Stärkeklasse, Holzart, Güte und Sortiment</summary><div id="summary-content"></div></details>
             <p class="footnote">Volumen rechnerisch nach der Zylinderformel. Angaben vor dem Verkauf prüfen.</p>
         </section>
         <section class="exchange-card card" aria-labelledby="exchange-heading">

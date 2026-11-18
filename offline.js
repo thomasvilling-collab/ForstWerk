@@ -21,7 +21,7 @@ async function showOfflineStatus(registration)
                 throw new Error("Offline-Speicher fehlt");
             }
             const cache = await caches.open(cacheName);
-            const required = ["./index.html", "./style.css", "./app.js", "./locations.js",
+            const required = ["./index.html", "./style.css", "./strength.js", "./app.js", "./locations.js",
                 "./exchange.js", "./improvements.js", "./offline.js", "./manifest.webmanifest"];
             const files = await Promise.all(required.map((file) => cache.match(new URL(file, registration.scope).href)));
             if (files.some((file) => !file))
@@ -54,7 +54,8 @@ function showUpdate(worker)
 
 function unsavedWork()
 {
-    if (editingId || fields.diameter.value.trim() || element("list-name").value.trim() || !element("import-preview").hidden)
+    if (editingId || fields.diameter.value.trim() || element("list-name").value.trim() ||
+        !element("import-preview").hidden || element("review-bark").open)
     {
         return true;
     }
