@@ -10,6 +10,8 @@ In BelegWerk auf der Übersicht „ForstWerk-WLAN-Verbindung testen …“ öffn
 
 Bei Fehlschlag können Netzwerk, Windows-Firewall oder der Browserzugriff von HTTPS auf lokales HTTP die Ursache sein. Die Testadresse kann zur Eingrenzung in einem neuen Browserfenster geöffnet werden; deren Erreichbarkeit allein bestätigt nicht den direkten Zugriff aus der ForstWerk-Web-App. Der Testcode ist keine Authentifizierung für echte Datenübertragungen. Der Datenimport über eine Cloud-Datei bleibt unverändert. Den Test auf dem tatsächlichen iPhone durchführen.
 
+Stammnummern werden je Polter automatisch vorgeschlagen und können manuell geändert werden. Nach einer Eingabe läuft die Nummerierung dort weiter. Gleich benannte Polter gelten über alle Listen auf diesem Gerät als derselbe Polter; Groß- und Kleinschreibung sowie Leerzeichen am Rand werden ignoriert. Die gleiche Nummer kann in verschiedenen Poltern vorkommen. Unabhängige Geräte können offline nicht gegenseitig auf doppelte Nummern prüfen; beim Zusammenführen wird auf Konflikte geprüft.
+
 ## Stärkeklassen und Rindenabzug
 
 Der Mittendurchmesser wird mit Rinde eingegeben. Für Fichte, Tanne, Douglasie, Buche und Esche schlägt ForstWerk einen Rindenabzug vor (Anlage VII RVR 2024); dieser ist vor dem Speichern zu prüfen und kann überschrieben werden. Der Vorschlag verwendet den auf ganze Zentimeter abgerundeten Messwert zur Auswahl der Tabellenstufe. Für Kiefer, Eiche und Lärche zeigt ForstWerk die Tabellenwerte lediglich als Orientierung: Der Abzug muss geprüft und selbst eingegeben werden. Bei Kiefer mit Spiegelrinde gilt unabhängig vom Durchmesser 1 cm. Für gemischte oder andere Holzarten ist der Abzug manuell einzugeben. Abzug 0 ist ausdrücklich möglich.

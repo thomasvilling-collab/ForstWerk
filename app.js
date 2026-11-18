@@ -8,7 +8,8 @@ const fields = {
     assortment : element("assortment"),
     diameter : element("diameter"),
     length : element("length"),
-    bark : element("bark")
+    bark : element("bark"),
+    number : element("stem-number")
 };
 const form = element("entry-form");
 const gradeButtons = Array.from(document.querySelectorAll("[data-grade]"));
@@ -24,6 +25,7 @@ let lists = [{id : makeId(), name : "Holzliste 1", entries : [], defaults : {}}]
 let activeId = lists[0].id;
 let limits = {diameterMin : 5, diameterMax : 100, lengthMin : 1, lengthMax : 20};
 let nextFocus = "diameter";
+let nextByPolter = Object.create(null);
 
 function validLimits(value)
 {
@@ -32,10 +34,43 @@ function validLimits(value)
         value.diameterMin < value.diameterMax && value.lengthMin < value.lengthMax;
 }
 
+function polterKey(name)
+{
+    return name.trim().toLocaleLowerCase("de-DE");
+}
+
+function numberUsed(polter, number, excludedList = "", excludedId = "")
+{
+    const key = polterKey(polter);
+    return lists.some((list) => list.entries.some((entry) =>
+        !(list.id === excludedList && entry.id === excludedId) &&
+        polterKey(entry.polter) === key && entry.number === number));
+}
+
 function activeListNumber()
 {
-    const list = lists.find((item) => item.id === activeId);
-    return list.nextNumber || 1;
+    const polter = fields.polter.value;
+    const key = polterKey(polter);
+    let candidate = nextByPolter[key];
+    if (!Number.isSafeInteger(candidate) || candidate < 1)
+    {
+        candidate = 1;
+        for (const list of lists)
+        {
+            for (const entry of list.entries)
+            {
+                if (polterKey(entry.polter) === key && Number.isSafeInteger(entry.number))
+                {
+                    candidate = Math.max(candidate, entry.number + 1);
+                }
+            }
+        }
+    }
+    while (candidate <= 1000000000 && numberUsed(polter, candidate))
+    {
+        candidate++;
+    }
+    return candidate;
 }
 
 function normalizeNumbers(list)
@@ -46,11 +81,12 @@ function normalizeNumbers(list)
     {
         if (entry.number !== undefined)
         {
-            if (!Number.isSafeInteger(entry.number) || entry.number < 1 || used.has(entry.number))
+            const key = JSON.stringify([polterKey(entry.polter), entry.number]);
+            if (!Number.isSafeInteger(entry.number) || entry.number < 1 || entry.number > 1000000000 || used.has(key))
             {
                 throw new Error("Ungültige Stammnummer");
             }
-            used.add(entry.number);
+            used.add(key);
             highest = Math.max(highest, entry.number);
         }
     }
@@ -147,7 +183,7 @@ function switchList(id)
     {
         return false;
     }
-    if ((editingId || fields.diameter.value.trim() || element("review-bark").open) &&
+    if ((editingId || fields.diameter.value.trim() || fields.number.value.trim() || element("review-bark").open) &&
         !window.confirm("Die ungespeicherte Stammbearbeitung verwerfen und die Liste wechseln?"))
     {
         updateListSelect();
@@ -285,7 +321,7 @@ function save()
     const active = lists.find((list) => list.id === activeId);
     active.entries = entries;
     active.defaults = currentDefaults();
-    const state = {version : 2, lists, activeId, limits, nextFocus};
+    const state = {version : 2, lists, activeId, limits, nextFocus, nextByPolter};
     updateListSelect();
     try
     {
@@ -354,6 +390,17 @@ function restore()
             throw new Error("Ungültige aktive Liste");
         }
         lists = restoredLists;
+        nextByPolter = Object.create(null);
+        if (state.nextByPolter && typeof state.nextByPolter === "object" && !Array.isArray(state.nextByPolter))
+        {
+            for (const [key, value] of Object.entries(state.nextByPolter))
+            {
+                if (Number.isSafeInteger(value) && value >= 1 && value <= 1000000001)
+                {
+                    nextByPolter[key] = value;
+                }
+            }
+        }
         activeId = state.version === 2 ? state.activeId : lists[0].id;
         const active = lists.find((list) => list.id === activeId);
         entries = active.entries;
@@ -451,6 +498,23 @@ function render()
     const unreviewed = entries.filter((entry) => !hasBark(entry)).length;
     element("unreviewed-note").hidden = !unreviewed;
     element("unreviewed-note").textContent = `${unreviewed} ${unreviewed === 1 ? "Stamm benötigt" : "Stämme benötigen"} einen geprüften Rindenabzug und fehlen in der Summe ohne Rinde.`;
+    const seenNumbers = new Set();
+    let conflict = null;
+    for (const storedList of lists)
+    {
+        for (const entry of storedList.entries)
+        {
+            const key = JSON.stringify([polterKey(entry.polter), entry.number]);
+            if (seenNumbers.has(key) && !conflict)
+            {
+                conflict = entry;
+            }
+            seenNumbers.add(key);
+        }
+    }
+    element("number-conflict").hidden = !conflict;
+    element("number-conflict").textContent = conflict ? `Vorhandener Konflikt: Stammnummer ${conflict.number} kommt im Polter „${conflict.polter}“ mehrfach vor. Bitte betroffene Stämme prüfen und ändern.` : "";
+    fields.number.placeholder = String(activeListNumber());
     element("next-number").textContent =
         editingId ? `STAMM ${entries.find((item) => item.id === editingId).number} BEARBEITEN` :
             `STAMM ${String(activeListNumber()).padStart(2, "0")}`;
@@ -474,6 +538,7 @@ function startEdit(id)
         return;
     }
     editingId = id;
+    fields.number.value = String(entry.number);
     fields.polter.value = entry.polter;
     fields.species.value = entry.species;
     fields.assortment.value = entry.assortment;
@@ -501,6 +566,7 @@ function finishEdit()
     element("submit-entry").querySelector("span:nth-child(2)").textContent = "Stamm speichern";
     element("cancel-edit").hidden = true;
     fields.diameter.value = "";
+    fields.number.value = "";
     fields.bark.value = "";
     fields.bark.dataset.manual = "false";
     clearErrors();
@@ -541,7 +607,13 @@ form.addEventListener("submit", (event) => {
     const diameter = parseNumber(fields.diameter.value);
     const length = parseNumber(fields.length.value);
     const bark = parseBark(fields.bark.value);
+    const numberText = fields.number.value.trim();
+    const number = numberText === "" ? activeListNumber() : Number(numberText);
     const missing = [];
+    if ((numberText !== "" && !/^\d+$/.test(numberText)) || !Number.isSafeInteger(number) || number < 1 || number > 1000000000 || numberUsed(fields.polter.value, number, activeId, editingId || ""))
+    {
+        missing.push([fields.number, "für diesen Polter eindeutige Stammnummer (1 bis 1000000000)"]);
+    }
     if (!fields.polter.value.trim())
     {
         missing.push([ fields.polter, "Polterbezeichnung" ]);
@@ -594,9 +666,10 @@ form.addEventListener("submit", (event) => {
     }
     const index = entries.findIndex((entry) => entry.id === editingId);
     const list = lists.find((item) => item.id === activeId);
+    const numberingChanged = index < 0 || entries[index].number !== number || polterKey(entries[index].polter) !== polterKey(fields.polter.value);
     const record = {
         id : editingId || makeId(),
-        number : index >= 0 ? entries[index].number : activeListNumber(),
+        number,
         polter : fields.polter.value.trim(),
         species : fields.species.value,
         assortment : fields.assortment.value,
@@ -608,11 +681,16 @@ form.addEventListener("submit", (event) => {
     if (index >= 0)
     {
         entries[index] = record;
+        list.nextNumber = Math.max(list.nextNumber || 1, record.number + 1);
     }
     else
     {
         entries.push(record);
-        list.nextNumber = record.number + 1;
+        list.nextNumber = Math.max(list.nextNumber || 1, record.number + 1);
+    }
+    if (numberingChanged)
+    {
+        nextByPolter[polterKey(record.polter)] = number + 1;
     }
     finishEdit();
     save();
@@ -639,6 +717,14 @@ Object.values(fields).forEach((field) => {
         {
             fields.bark.dataset.manual = "true";
             updateBarkSuggestion();
+        }
+        if (field === fields.polter)
+        {
+            fields.number.placeholder = String(activeListNumber());
+            if (!editingId)
+            {
+                element("next-number").textContent = `STAMM ${String(activeListNumber()).padStart(2, "0")}`;
+            }
         }
         if (field === fields.diameter || field === fields.species)
         {

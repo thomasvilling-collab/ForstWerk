@@ -176,13 +176,15 @@ function preparePrint()
             }
             const table = document.createElement("table");
             const header = table.createTHead().insertRow();
-            ["Nr.", "Holzart", "Güte", "Länge m", "MD m.R.", "Abzug cm", "Stärke", "fm o.R."].forEach((label) => appendText(header, "th", label));
+            ["Pos.", "Stammnr.", "Holzart", "Güte", "Stärke", "Länge m", "MD m.R. cm", "MD o.R. cm", "fm m.R.", "fm o.R."].forEach((label) => appendText(header, "th", label));
             const body = table.createTBody();
-            group.entries.forEach(({entry, number}) => {
+            group.entries.forEach(({entry, number}, index) => {
                 const row = body.insertRow();
-                [number, entry.species, entry.grade, entry.length.toLocaleString("de-DE"),
-                    entry.diameter.toLocaleString("de-DE"), hasBark(entry) ? entry.barkDeductionCm.toLocaleString("de-DE") : "–",
+                [index + 1, number, entry.species, entry.grade,
                     hasBark(entry) ? strengthClass(netDiameter(entry)) : "ungeprüft",
+                    entry.length.toLocaleString("de-DE"), entry.diameter.toLocaleString("de-DE"),
+                    hasBark(entry) ? netDiameter(entry).toLocaleString("de-DE") : "–",
+                    formatter.format(volumeOf(entry.diameter, entry.length)),
                     hasBark(entry) ? formatter.format(stemVolume(entry)) : "–"].forEach((value) => appendText(row, "td", String(value)));
             });
             groupSection.append(table);
@@ -282,6 +284,7 @@ function showImport(data)
     element("import-preview").hidden = false;
 }
 
+let importNumbering = null;
 let exportSelectionSignature = "";
 function refreshExportSelection()
 {
@@ -321,7 +324,7 @@ element("export-json").addEventListener("click", () => {
         return;
     }
     save();
-    const data = {format : exchangeFormat, version : 2, exportedAt : new Date().toISOString(), lists : selectedLists()};
+    const data = {format : exchangeFormat, version : 2, exportedAt : new Date().toISOString(), lists : selectedLists(), nextByPolter};
     downloadFile(exportName("json"), JSON.stringify(data, null, 2), "application/json;charset=utf-8");
 });
 element("export-csv").addEventListener("click", () => {
@@ -343,6 +346,7 @@ element("import-file").addEventListener("change", async (event) => {
     element("import-preview").hidden = true;
     element("import-status").textContent = "";
     importCandidates = [];
+    importNumbering = null;
     const file = event.target.files[0];
     if (!file)
     {
@@ -359,6 +363,7 @@ element("import-file").addEventListener("change", async (event) => {
         {
             throw new Error("Die Datei ist keine gültige oder unterstützte ForstWerk-Holzlistendatei.");
         }
+        importNumbering = data.nextByPolter && typeof data.nextByPolter === "object" && !Array.isArray(data.nextByPolter) ? data.nextByPolter : null;
         showImport(data);
     }
     catch (error)
@@ -380,8 +385,42 @@ element("import-confirm").addEventListener("click", () => {
         element("import-status").textContent = "Bitte mindestens eine neue Liste auswählen.";
         return;
     }
+    const seen = new Set();
+    for (const list of lists)
+    {
+        for (const entry of list.entries)
+        {
+            seen.add(JSON.stringify([polterKey(entry.polter), entry.number]));
+        }
+    }
+    for (const list of added)
+    {
+        for (const entry of list.entries)
+        {
+            const key = JSON.stringify([polterKey(entry.polter), entry.number]);
+            if (seen.has(key))
+            {
+                element("import-status").textContent = `Import nicht möglich: Stammnummer ${entry.number} ist im Polter „${entry.polter}“ bereits vorhanden. Bitte vor dem Import prüfen und ändern.`;
+                return;
+            }
+            seen.add(key);
+        }
+    }
     lists.push(...added);
+    if (importNumbering)
+    {
+        const keys = new Set(added.flatMap((list) => list.entries.map((entry) => polterKey(entry.polter))));
+        for (const key of keys)
+        {
+            const candidate = importNumbering[key];
+            if (Number.isSafeInteger(candidate) && candidate >= 1 && candidate <= 1000000001)
+            {
+                nextByPolter[key] = Math.max(nextByPolter[key] || 1, candidate);
+            }
+        }
+    }
     save();
+    render();
     element("import-status").textContent = storageAvailable ? `${added.length} ${added.length === 1 ? "Liste importiert" : "Listen importiert"}.` : "Import nur vorübergehend vorhanden: Speichern auf diesem Gerät nicht möglich.";
     element("import-preview").hidden = true;
     element("import-file").value = "";
