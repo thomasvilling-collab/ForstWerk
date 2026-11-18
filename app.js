@@ -148,7 +148,7 @@ function currentDefaults()
 function applyDefaults(defaults)
 {
     fields.polter.value = typeof defaults.polter === "string" ? defaults.polter : "";
-    fields.species.value = typeof defaults.species === "string" ? defaults.species : "";
+    fields.species.value = typeof defaults.species === "string" && defaults.species !== "Fichte/Tanne" ? defaults.species : "";
     fields.assortment.value = typeof defaults.assortment === "string" ? defaults.assortment : "";
     fields.length.value = typeof defaults.length === "string" ? defaults.length : "";
     setGrade([ "A", "B", "C", "D", "K" ].includes(defaults.grade) ? defaults.grade : "");
@@ -289,7 +289,7 @@ function updateBarkSuggestion()
     const proposal = suggestedBark(fields.species.value, parseNumber(fields.diameter.value));
     const orientation = isBarkOrientation(fields.species.value);
     fields.bark.value = proposal === null || orientation ? "" : String(proposal);
-    fields.bark.placeholder = orientation && proposal !== null ? `Orientierung: ${proposal} cm – bitte eingeben` : "Bitte prüfen / eingeben";
+    fields.bark.placeholder = orientation && proposal !== null ? `Richtwert ${proposal} cm` : "cm";
     element("bark-hint").textContent = orientation && proposal !== null ?
         `Orientierungswert: ${proposal} cm. Keine pauschale Anwendung; Abzug prüfen und selbst eingeben.${fields.species.value === "Kiefer" ? " Bei Spiegelrinde gilt 1 cm unabhängig vom Durchmesser." : ""}` :
         proposal === null ? "Bitte Rindenabzug für diese Holzart selbst eingeben." :
@@ -569,6 +569,10 @@ function finishEdit()
     fields.number.value = "";
     fields.bark.value = "";
     fields.bark.dataset.manual = "false";
+    if (fields.species.value === "Fichte/Tanne")
+    {
+        fields.species.value = "";
+    }
     clearErrors();
     render();
 }
@@ -618,7 +622,7 @@ form.addEventListener("submit", (event) => {
     {
         missing.push([ fields.polter, "Polterbezeichnung" ]);
     }
-    if (!fields.species.value)
+    if (!fields.species.value || (!editingId && fields.species.value === "Fichte/Tanne"))
     {
         missing.push([ fields.species, "Holzart" ]);
     }

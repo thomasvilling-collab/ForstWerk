@@ -32,7 +32,7 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.2.5</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.2.6</span></small></div>
         <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
 
         <section class="lists-card card" aria-labelledby="lists-heading">
@@ -58,7 +58,7 @@
                 <p id="location-status" class="location-hint" role="status"></p><a id="location-map" target="_blank" rel="noopener noreferrer" hidden>In Karte öffnen ↗</a>
             </div>
             <div class="defaults-grid">
-                <div><label class="field-label" for="species">Holzart</label><select id="species"><option value="">Bitte auswählen</option><option>Fichte</option><option>Tanne</option><option>Fichte/Tanne</option><option>Douglasie</option><option>Kiefer</option><option>Lärche</option><option>Buche</option><option>Esche</option><option>Eiche</option><option>Sonstige</option></select></div>
+                <div><label class="field-label" for="species">Holzart</label><select id="species"><option value="">Bitte auswählen</option><option>Fichte</option><option>Tanne</option><option value="Fichte/Tanne" hidden>Fichte/Tanne (Altbestand)</option><option>Douglasie</option><option>Kiefer</option><option>Lärche</option><option>Buche</option><option>Esche</option><option>Eiche</option><option>Sonstige</option></select></div>
                 <div><label class="field-label" for="assortment">Sortiment</label><select id="assortment"><option value="">Bitte auswählen</option><option>Sägeholz</option><option>Industrieholz</option><option>Brennholz</option><option>Sonstiges</option></select></div>
             </div>
         </section>
@@ -66,12 +66,18 @@
         <section class="entry-card card" aria-labelledby="entry-heading">
             <div class="section-top entry-title"><div><p class="eyebrow">NEUER STAMM</p><h2 id="entry-heading">Maße &amp; Güte</h2></div><span class="entry-number" id="next-number">STAMM 01</span></div>
             <form id="entry-form" novalidate>
-                <div><label class="field-label" for="stem-number">Stammnummer</label><input id="stem-number" inputmode="numeric" autocomplete="off" aria-describedby="stem-number-hint"><p id="stem-number-hint" class="list-hint">Nummer eingeben oder den Vorschlag übernehmen. Die Nummerierung läuft je Polter weiter.</p><p id="number-conflict" class="form-error" role="alert" hidden></p></div>
                 <div class="measure-grid">
                     <div><label class="field-label" for="length">Länge</label><div class="unit-field"><input id="length" inputmode="decimal" autocomplete="off" placeholder="0,0" aria-describedby="length-unit"><span id="length-unit">m</span></div></div>
                     <div><label class="field-label" for="diameter">Mittendurchmesser <span>mit Rinde</span></label><div class="unit-field"><input id="diameter" inputmode="decimal" autocomplete="off" placeholder="0" aria-describedby="diameter-unit"><span id="diameter-unit">cm</span></div></div>
                 </div>
-                <div class="bark-row"><label class="field-label" for="bark">Rindenabzug am Durchmesser (cm)</label><input id="bark" inputmode="decimal" placeholder="Bitte prüfen / eingeben" autocomplete="off"><p id="bark-hint" class="list-hint">Der Abzug gilt für Durchmesser und Festmeter ohne Rinde.</p><p id="strength-preview" class="list-hint">Stärkeklasse: –</p></div>
+                <div class="secondary-measures">
+                    <div><label class="field-label" for="stem-number">Stammnummer</label><input id="stem-number" inputmode="numeric" autocomplete="off" aria-describedby="stem-number-hint"></div>
+                    <div><label class="field-label" for="bark">Rindenabzug (cm)</label><input id="bark" inputmode="decimal" placeholder="cm" autocomplete="off" aria-describedby="bark-hint"></div>
+                </div>
+                <p id="stem-number-hint" class="list-hint">Nummer eingeben oder den Vorschlag übernehmen. Die Nummerierung läuft je Polter weiter.</p>
+                <p id="number-conflict" class="form-error" role="alert" hidden></p>
+                <p id="bark-hint" class="list-hint">Der Abzug gilt für Durchmesser und Festmeter ohne Rinde.</p>
+                <p id="strength-preview" class="list-hint">Stärkeklasse: –</p>
                 <div class="quick-row"><span>Schnellwahl Länge</span><div class="quick-buttons" aria-label="Länge auswählen"><button type="button" data-length="4">4 m</button><button type="button" data-length="5">5 m</button><button type="button" data-length="6">6 m</button></div></div>
                 <fieldset class="grades"><legend>Güte</legend><div class="grade-grid"><button type="button" data-grade="A" aria-pressed="false">A</button><button type="button" data-grade="B" aria-pressed="false">B</button><button type="button" data-grade="C" aria-pressed="false">C</button><button type="button" data-grade="D" aria-pressed="false">D</button><button type="button" data-grade="K" aria-pressed="false">K</button></div></fieldset>
                 <div class="entry-preview"><span>Volumen dieses Stamms <small>Zylinderformel ohne Rinde</small></span><strong id="entry-volume">– <small>fm</small></strong></div>
@@ -95,7 +101,7 @@
             <div class="list-heading"><h3>Erfasste Stämme</h3><span id="list-count">0 Einträge</span></div>
             <div id="empty-state" class="empty-state"><div class="empty-icon" aria-hidden="true">＋</div><strong>Noch keine Stämme erfasst</strong><p>Dein erster Stamm erscheint hier.</p></div>
             <ul id="entries" class="entry-list" aria-label="Erfasste Stämme"></ul>
-            <details class="summary-panel"><summary>Auswertung nach Stärkeklasse, Holzart, Güte und Sortiment</summary><div id="summary-content"></div></details>
+            <details class="summary-panel"><summary>Auswertung nach Stärkeklasse, Holzart, Güte und Sortiment</summary><div id="summary-content"></div><button type="button" id="export-summary-pdf">Auswertung als PDF / Drucken</button></details>
             <p class="footnote">Volumen rechnerisch nach der Zylinderformel. Angaben vor dem Verkauf prüfen.</p>
         </section>
         <section class="exchange-card card" aria-labelledby="exchange-heading">

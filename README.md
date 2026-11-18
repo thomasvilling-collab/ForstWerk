@@ -12,6 +12,8 @@ Bei Fehlschlag können Netzwerk, Windows-Firewall oder der Browserzugriff von HT
 
 Stammnummern werden je Polter automatisch vorgeschlagen und können manuell geändert werden. Nach einer Eingabe läuft die Nummerierung dort weiter. Gleich benannte Polter gelten über alle Listen auf diesem Gerät als derselbe Polter; Groß- und Kleinschreibung sowie Leerzeichen am Rand werden ignoriert. Die gleiche Nummer kann in verschiedenen Poltern vorkommen. Unabhängige Geräte können offline nicht gegenseitig auf doppelte Nummern prüfen; beim Zusammenführen wird auf Konflikte geprüft.
 
+Die Auswertung der aktiven Holzliste kann direkt unter der Auswertung separat gedruckt oder über den Druckdialog als PDF gespeichert werden. Stämme ohne geprüften Rindenabzug werden ausgewiesen, aber nicht in den Summen berücksichtigt.
+
 ## Stärkeklassen und Rindenabzug
 
 Der Mittendurchmesser wird mit Rinde eingegeben. Für Fichte, Tanne, Douglasie, Buche und Esche schlägt ForstWerk einen Rindenabzug vor (Anlage VII RVR 2024); dieser ist vor dem Speichern zu prüfen und kann überschrieben werden. Der Vorschlag verwendet den auf ganze Zentimeter abgerundeten Messwert zur Auswahl der Tabellenstufe. Für Kiefer, Eiche und Lärche zeigt ForstWerk die Tabellenwerte lediglich als Orientierung: Der Abzug muss geprüft und selbst eingegeben werden. Bei Kiefer mit Spiegelrinde gilt unabhängig vom Durchmesser 1 cm. Für gemischte oder andere Holzarten ist der Abzug manuell einzugeben. Abzug 0 ist ausdrücklich möglich.

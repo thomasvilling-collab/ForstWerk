@@ -334,6 +334,32 @@ element("export-csv").addEventListener("click", () => {
     }
     downloadFile(exportName("csv"), exportCsv(), "text/csv;charset=utf-8");
 });
+element("export-summary-pdf").addEventListener("click", () => {
+    if ((editingId || fields.diameter.value.trim() || fields.number.value.trim()) &&
+        !window.confirm("Der begonnene Stamm ist noch nicht gespeichert und erscheint nicht in der Auswertung. Trotzdem drucken?"))
+    {
+        return;
+    }
+    const list = lists.find((item) => item.id === activeId);
+    const content = element("print-content");
+    content.replaceChildren();
+    const section = document.createElement("section");
+    section.className = "print-list print-summary";
+    appendText(section, "p", "FORSTWERK · HOLZAUFNAHME", "print-brand");
+    appendText(section, "h1", `Auswertung · ${list.name}`);
+    const reviewed = entries.filter(hasBark);
+    const pending = entries.length - reviewed.length;
+    const volume = reviewed.reduce((sum, entry) => sum + stemVolume(entry), 0);
+    appendText(section, "p", `${reviewed.length} geprüfte Stämme · ${formatter.format(volume)} fm o.R.${pending ? ` · ${pending} ungeprüft und nicht enthalten` : ""}`);
+    const summary = element("summary-content");
+    for (const child of summary.children)
+    {
+        section.append(child.cloneNode(true));
+    }
+    appendText(section, "p", "Volumen rechnerisch nach der Zylinderformel; Angaben vor dem Verkauf prüfen.", "print-note");
+    content.append(section);
+    window.print();
+});
 element("export-pdf").addEventListener("click", () => {
     if (!canExport())
     {
