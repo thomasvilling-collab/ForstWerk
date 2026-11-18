@@ -1,5 +1,11 @@
 # ForstWerk – erste Oberfläche
 
+## WLAN-Verbindungstest
+
+In BelegWerk auf der Übersicht „ForstWerk-WLAN-Verbindung testen …“ öffnen. In ForstWerk unter „WLAN-Verbindung testen“ eine der angezeigten privaten IPv4-Adressen mit Port und den Testcode eingeben. Alternativ kann die vollständige Testadresse in das Adressfeld kopiert werden. Der Test sendet nur einen kurzlebigen Code, keine Holzlisten. Der BelegWerk-Testdienst ist nur beim geöffneten Dialog aktiv.
+
+Bei Fehlschlag können Netzwerk, Windows-Firewall oder der Browserzugriff von HTTPS auf lokales HTTP die Ursache sein. Die Testadresse kann zur Eingrenzung in einem neuen Browserfenster geöffnet werden; deren Erreichbarkeit allein bestätigt nicht den direkten Zugriff aus der ForstWerk-Web-App. Der Testcode ist keine Authentifizierung für echte Datenübertragungen. Der Datenimport über eine Cloud-Datei bleibt unverändert. Den Test auf dem tatsächlichen iPhone durchführen.
+
 ## Stärkeklassen und Rindenabzug
 
 Der Mittendurchmesser wird mit Rinde eingegeben. Für Fichte, Tanne, Douglasie, Buche und Esche schlägt ForstWerk einen Rindenabzug vor (Anlage VII RVR 2024); dieser ist vor dem Speichern zu prüfen und kann überschrieben werden. Der Vorschlag verwendet den auf ganze Zentimeter abgerundeten Messwert zur Auswahl der Tabellenstufe. Für gemischte oder andere Holzarten ist der Abzug manuell einzugeben. Abzug 0 ist ausdrücklich möglich.
