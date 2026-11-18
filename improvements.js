@@ -103,7 +103,15 @@ function renderBarkReview()
         input.setAttribute("aria-label", `Rindenabzug in cm für Stamm ${entry.number}`);
         input.placeholder = "Abzug cm";
         const suggestion = suggestedBark(entry.species, entry.diameter);
-        input.value = suggestion === null ? "" : String(suggestion);
+        if (suggestion !== null && isBarkOrientation(entry.species))
+        {
+            input.placeholder = `Richtwert ${suggestion} cm`;
+            input.title = entry.species === "Kiefer" ? "Orientierungswert; bei Spiegelrinde 1 cm. Bitte selbst prüfen und eingeben." : "Orientierungswert, keine pauschale Anwendung. Bitte selbst prüfen und eingeben.";
+        }
+        else
+        {
+            input.value = suggestion === null ? "" : String(suggestion);
+        }
         row.append(label, input);
         target.append(row);
     });

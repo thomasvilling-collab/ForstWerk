@@ -43,5 +43,13 @@ function strengthClass(diameterCm)
     {
         return "5";
     }
-    return "6";
+    if (diameterCm < 70)
+    {
+        return "6";
+    }
+    if (diameterCm < 80)
+    {
+        return "7";
+    }
+    return "8";
 }

@@ -211,9 +211,19 @@ function suggestedBark(species, diameter)
         return measured <= 41 ? 1 : 2;
     case "Esche":
         return measured <= 18 ? 1 : measured <= 29 ? 2 : measured <= 44 ? 3 : 4;
+    case "Kiefer":
+        return measured <= 20 ? 1 : measured <= 36 ? 2 : measured <= 62 ? 3 : 4;
+    case "Eiche":
+    case "Lärche":
+        return measured <= 20 ? 1 : measured <= 31 ? 2 : measured <= 42 ? 3 : measured <= 53 ? 4 : 5;
     default:
         return null;
     }
+}
+
+function isBarkOrientation(species)
+{
+    return ["Kiefer", "Eiche", "Lärche"].includes(species);
 }
 
 function hasBark(entry)
@@ -241,9 +251,12 @@ function updateBarkSuggestion()
         return;
     }
     const proposal = suggestedBark(fields.species.value, parseNumber(fields.diameter.value));
-    fields.bark.value = proposal === null ? "" : String(proposal);
-    element("bark-hint").textContent = proposal === null ?
-        "Bitte Rindenabzug für diese Holzart selbst eingeben." :
+    const orientation = isBarkOrientation(fields.species.value);
+    fields.bark.value = proposal === null || orientation ? "" : String(proposal);
+    fields.bark.placeholder = orientation && proposal !== null ? `Orientierung: ${proposal} cm – bitte eingeben` : "Bitte prüfen / eingeben";
+    element("bark-hint").textContent = orientation && proposal !== null ?
+        `Orientierungswert: ${proposal} cm. Keine pauschale Anwendung; Abzug prüfen und selbst eingeben.${fields.species.value === "Kiefer" ? " Bei Spiegelrinde gilt 1 cm unabhängig vom Durchmesser." : ""}` :
+        proposal === null ? "Bitte Rindenabzug für diese Holzart selbst eingeben." :
         "Vorschlag nach Holzart und Durchmesser; vor dem Speichern prüfen und bei Bedarf ändern.";
 }
 
