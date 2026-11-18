@@ -41,6 +41,7 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .defaults-grid, .measure-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .defaults-grid { margin-top: 17px; }
 .measure-grid { align-items: end; }
+.measure-grid + .form-error[hidden] + #submit-entry, .measure-grid + .form-error:not([hidden]) + #submit-entry { margin-top: 14px; }
 .secondary-measures { display: flex; align-items: end; flex-wrap: wrap; gap: 12px 24px; margin-top: 15px; }
 .secondary-measures > div { min-width: 0; }
 .secondary-measures input { width: 130px; max-width: 100%; }
