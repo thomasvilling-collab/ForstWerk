@@ -22,7 +22,8 @@ async function showOfflineStatus(registration)
             }
             const cache = await caches.open(cacheName);
             const required = ["./index.html", "./style.css", "./strength.js", "./app.js", "./locations.js",
-                "./exchange.js", "./improvements.js", "./lan-test.js", "./offline.js", "./manifest.webmanifest"];
+                "./exchange.js", "./improvements.js", "./vendor/jsQR.js", "./lan-test.js", "./offline.js",
+                "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
             const files = await Promise.all(required.map((file) => cache.match(new URL(file, registration.scope).href)));
             if (files.some((file) => !file))
             {

@@ -2,6 +2,10 @@
 
 ## WLAN-Verbindungstest
 
+BelegWerk zeigt für die ausgewählte Netzwerkadresse einen QR-Code. In ForstWerk „QR-Code scannen“ wählen und die Kameraberechtigung freigeben. Nach dem Einlesen werden Adresse und Testcode eingetragen; „Verbindung prüfen“ startet den eigentlichen Test. Die Kamera wird nach dem Einlesen, beim Schließen oder beim Verlassen der App gestoppt. Bei fehlender Kamerafreigabe können die Werte weiterhin manuell eingetragen werden. Der Scan verwendet die lokal mitgelieferte Bibliothek jsQR 1.4.0 (Apache-2.0; Lizenz in `vendor/jsQR-LICENSE.txt`); es wird kein Scan-Dienst im Internet verwendet.
+
+Das FW-Symbol wird über das Manifest und `apple-touch-icon` bereitgestellt. Vor dem Entfernen oder erneuten Hinzufügen eines Home-Bildschirm-Symbols Holzlisten als JSON sichern: Die eigenständige App und Safari können getrennte Speicher haben. Für die Veröffentlichung auch die drei `icon-*.png` und den Ordner `vendor` hochladen.
+
 In BelegWerk auf der Übersicht „ForstWerk-WLAN-Verbindung testen …“ öffnen. In ForstWerk unter „WLAN-Verbindung testen“ eine der angezeigten privaten IPv4-Adressen mit Port und den Testcode eingeben. Alternativ kann die vollständige Testadresse in das Adressfeld kopiert werden. Der Test sendet nur einen kurzlebigen Code, keine Holzlisten. Der BelegWerk-Testdienst ist nur beim geöffneten Dialog aktiv.
 
 Bei Fehlschlag können Netzwerk, Windows-Firewall oder der Browserzugriff von HTTPS auf lokales HTTP die Ursache sein. Die Testadresse kann zur Eingrenzung in einem neuen Browserfenster geöffnet werden; deren Erreichbarkeit allein bestätigt nicht den direkten Zugriff aus der ForstWerk-Web-App. Der Testcode ist keine Authentifizierung für echte Datenübertragungen. Der Datenimport über eine Cloud-Datei bleibt unverändert. Den Test auf dem tatsächlichen iPhone durchführen.
