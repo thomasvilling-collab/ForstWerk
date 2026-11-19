@@ -181,7 +181,7 @@ for (const field of [element("lan-address"), element("lan-code")])
     });
 }
 
-function sendLanPayload(path, payload, status, label)
+function sendLanPayload(path, payload, status, label, target = "_blank")
 {
     const address = element("lan-address").value;
     let endpoint;
@@ -189,7 +189,7 @@ function sendLanPayload(path, payload, status, label)
     catch (error) { status.textContent = error.message || "WLAN-Adresse oder Code ungültig."; return; }
     const form = document.createElement("form");
     form.method = "POST"; form.action = endpoint; form.enctype = "application/x-www-form-urlencoded";
-    form.target = "_blank"; form.referrerPolicy = "no-referrer"; form.setAttribute("rel", "noopener noreferrer"); form.hidden = true;
+    form.target = target; form.referrerPolicy = "no-referrer"; form.hidden = true;
     const field = document.createElement("input"); field.type = "hidden"; field.name = "payload"; field.value = payload;
     form.append(field); document.body.append(form); status.textContent = `${label} wird an BelegWerk gesendet …`;
     form.submit(); form.remove();
@@ -266,6 +266,13 @@ element("receipt-photo-input").addEventListener("change", (event) => {
 element("receipt-send-button").addEventListener("click", async () => {
     const status = element("receipt-send-status");
     if (!receiptFiles.length) { status.textContent = "Bitte zuerst mindestens ein Belegfoto aufnehmen."; return; }
+    const target = `belegwerk-receipt-${Date.now()}`;
+    const transferWindow = window.open("about:blank", target);
+    if (!transferWindow)
+    {
+        status.textContent = "Safari hat das Empfangsfenster blockiert. Pop-ups für ForstWerk erlauben und erneut senden.";
+        return;
+    }
     try
     {
         const files = [];
@@ -290,10 +297,14 @@ element("receipt-send-button").addEventListener("click", async () => {
             files.push({name : `${base}.jpg`, data});
         }
         const payload = JSON.stringify({format : "BelegWerk-Receipt", version : 1, files});
-        if (new Blob([payload]).size > 52 * 1024 * 1024) throw new Error("Die Fotos sind für die WLAN-Übertragung zu groß.");
+        if (new Blob([payload]).size > 68 * 1024 * 1024) throw new Error("Die Fotos sind für die WLAN-Übertragung zu groß.");
         if (element("lan-address").dataset.scannedPath && element("lan-address").dataset.scannedPath !== "/beleg-import")
             throw new Error("Bitte den Beleg-QR-Code in BelegWerk scannen.");
-        sendLanPayload("/beleg-import", payload, status, "Belegfotos");
+        sendLanPayload("/beleg-import", payload, status, "Belegfotos", target);
     }
-    catch (error) { status.textContent = error.message || "Die Belegfotos konnten nicht vorbereitet werden."; }
+    catch (error)
+    {
+        transferWindow.close();
+        status.textContent = error.message || "Die Belegfotos konnten nicht vorbereitet werden.";
+    }
 });

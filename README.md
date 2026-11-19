@@ -44,7 +44,7 @@ Bei einem Update erscheint ein Button. Angefangene Stammdaten, Standortänderung
 
 ### Belegfotos an BelegWerk senden
 
-In BelegWerk unter „Belege / Eingangsrechnungen“ auf „Foto vom iPhone …“ klicken. In ForstWerk den Empfangs-QR-Code scannen, pro Beleg eine oder mehrere Seiten aufnehmen und „Belegfotos an BelegWerk senden“ wählen. Die Fotos werden auf dem iPhone für die Übertragung als JPEG auf höchstens 2600 Pixel lange Kante verkleinert. BelegWerk speichert sie im zuletzt für den Dateiimport verwendeten Belegordner; beim ersten Lauf ist das `Dokumente\BelegWerk\Belege`. Die App liest die Bilder lokal mit OCR und öffnet die Vorschau zur Prüfung. Die WLAN-Übertragung ist unverschlüsselt und funktioniert nur im gleichen, vertrauenswürdigen WLAN.
+In BelegWerk unter „Belege / Eingangsrechnungen“ auf „Foto vom iPhone …“ klicken. In ForstWerk den Empfangs-QR-Code scannen, pro Beleg eine oder mehrere Seiten aufnehmen und „Belegfotos an BelegWerk senden“ wählen. Die Fotos werden auf dem iPhone für die Übertragung als JPEG auf höchstens 2600 Pixel lange Kante verkleinert. BelegWerk speichert sie im zuletzt für den Dateiimport verwendeten Belegordner; beim ersten Lauf ist das `Dokumente\BelegWerk\Belege`. Die App liest die Bilder lokal mit OCR und öffnet die Vorschau zur Prüfung. Die WLAN-Übertragung ist unverschlüsselt und funktioniert nur im gleichen, vertrauenswürdigen WLAN. ForstWerk öffnet das Empfangsfenster direkt beim Tippen auf den Senden-Button, damit Safari es nicht als blockiertes Popup verwirft.
 
 ## Export und Import
 
