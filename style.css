@@ -47,8 +47,7 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .secondary-measures input { width: 130px; max-width: 100%; }
 #export-summary-pdf { margin-top: 16px; border: 1px solid #28694c; border-radius: 9px; background: #28694c; color: white; font-weight: 700; padding: 12px 15px; }
 .location-box { margin-top: 15px; padding: 15px; border: 1px solid #e1eae0; border-radius: 10px; background: #f8faf6; }
-.location-heading { display: flex; justify-content: space-between; gap: 10px; color: #3b5245; font-size: 13px; }
-.location-heading span { color: #829386; font-size: 11px; }
+.location-box summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #315b40; }
 .location-hint { margin: 8px 0 12px; color: #728176; font-size: 12px; line-height: 1.4; }
 .location-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .location-grid input { padding: 0 9px; }
