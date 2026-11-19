@@ -1,6 +1,6 @@
 "use strict";
 
-const VERSION = "1.4.0";
+const VERSION = "1.4.1";
 const CACHE_NAME = `forstwerk-app-${VERSION}`;
 const FILES = ["./", "./index.html", "./style.css", "./strength.js", "./app.js", "./locations.js",
     "./exchange.js", "./improvements.js", "./vendor/jsQR.js", "./receipt-crop.js", "./lan-test.js", "./offline.js",

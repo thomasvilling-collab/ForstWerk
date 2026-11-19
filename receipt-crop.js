@@ -92,12 +92,17 @@ function renderReceiptPhotos()
     receiptPhotoItems.forEach((item, index) => {
         const row = document.createElement("div");
         row.className = "receipt-photo-row";
+        const preview = document.createElement("div");
+        preview.className = "receipt-photo-preview";
         const image = document.createElement("img");
         image.src = URL.createObjectURL(item.file);
         image.dataset.objectUrl = image.src;
         image.alt = `Seite ${index + 1}`;
         const details = document.createElement("span");
         details.textContent = `${index + 1}. ${item.file.name}${item.crop ? " · Zuschnitt gesetzt" : " · ganzes Foto"}`;
+        preview.append(image, details);
+        const actions = document.createElement("div");
+        actions.className = "receipt-photo-actions";
         const crop = document.createElement("button");
         crop.type = "button";
         crop.textContent = item.crop ? "Zuschnitt ändern" : "Zuschneiden";
@@ -110,7 +115,8 @@ function renderReceiptPhotos()
             receiptPhotoItems.splice(index, 1);
             renderReceiptPhotos();
         });
-        row.append(image, details, crop, remove);
+        actions.append(crop, remove);
+        row.append(preview, actions);
         target.append(row);
     });
 }
