@@ -10,9 +10,11 @@ Die WLAN-Empfangsseite in BelegWerk bleibt während der Übertragung geöffnet. 
 
 Bei Fehlschlag Netzwerk, ausgewählte PC-Adresse und Windows-Firewall prüfen. Den BelegWerk-Empfangsdienst nur für ein privates, vertrauenswürdiges Netzwerk zulassen; die Windows-Firewall nicht vollständig ausschalten. Die Übertragung auf dem tatsächlichen iPhone prüfen. Der Testcode ist eine kurzfristige Zugriffssperre, aber keine Verschlüsselung oder sichere Anmeldung.
 
-Stammnummern werden je Polter automatisch vorgeschlagen und können manuell geändert werden. Nach einer Eingabe läuft die Nummerierung dort weiter. Gleich benannte Polter gelten über alle Listen auf diesem Gerät als derselbe Polter; Groß- und Kleinschreibung sowie Leerzeichen am Rand werden ignoriert. Die gleiche Nummer kann in verschiedenen Poltern vorkommen. Unabhängige Geräte können offline nicht gegenseitig auf doppelte Nummern prüfen; beim Zusammenführen wird auf Konflikte geprüft.
+Jede Holzliste besitzt eine eigene fortlaufende Stammnummerierung; beim Anlegen ist die Startnummer einstellbar. Nach einer manuellen Eingabe läuft die Nummerierung in dieser Liste weiter. Bereits vorhandene Nummern werden nicht verändert; bei älteren Listen beginnt der Vorschlag nach der bisher höchsten Nummer. Gleich benannte Polter gelten über alle Listen auf diesem Gerät als derselbe Polter; Groß- und Kleinschreibung sowie Leerzeichen am Rand werden ignoriert. Die gleiche Nummer kann in verschiedenen Poltern vorkommen. Unabhängige Geräte können offline nicht gegenseitig auf doppelte Nummern prüfen; beim Zusammenführen wird auf Konflikte geprüft.
 
 Die Auswertung der aktiven Holzliste kann direkt unter der Auswertung separat gedruckt oder über den Druckdialog als PDF gespeichert werden. Stämme ohne geprüften Rindenabzug werden ausgewiesen, aber nicht in den Summen berücksichtigt.
+
+Für die Nadelholzarten stehen spezifische Stammholzsortimente zur Auswahl. Gespeicherte Stämme mit älteren Sortiments- und Holzartbezeichnungen bleiben beim Bearbeiten erhalten.
 
 ## Stärkeklassen und Rindenabzug
 

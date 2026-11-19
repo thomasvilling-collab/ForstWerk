@@ -55,7 +55,7 @@ function showUpdate(worker)
 
 function unsavedWork()
 {
-    if (editingId || fields.diameter.value.trim() || fields.number.value.trim() || element("list-name").value.trim() ||
+    if (editingId || fields.diameter.value.trim() || fields.number.value.trim() || element("list-name").value.trim() || element("list-start").value.trim() !== "1" ||
         !element("import-preview").hidden || element("review-bark").open)
     {
         return true;

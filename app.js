@@ -49,24 +49,9 @@ function numberUsed(polter, number, excludedList = "", excludedId = "")
 
 function activeListNumber()
 {
-    const polter = fields.polter.value;
-    const key = polterKey(polter);
-    let candidate = nextByPolter[key];
-    if (!Number.isSafeInteger(candidate) || candidate < 1)
-    {
-        candidate = 1;
-        for (const list of lists)
-        {
-            for (const entry of list.entries)
-            {
-                if (polterKey(entry.polter) === key && Number.isSafeInteger(entry.number))
-                {
-                    candidate = Math.max(candidate, entry.number + 1);
-                }
-            }
-        }
-    }
-    while (candidate <= 1000000000 && numberUsed(polter, candidate))
+    const list = lists.find((item) => item.id === activeId);
+    let candidate = list.nextSequence || 1;
+    while (candidate <= 1000000000 && numberUsed(fields.polter.value, candidate))
     {
         candidate++;
     }
@@ -103,6 +88,14 @@ function normalizeNumbers(list)
         }
     }
     list.nextNumber = next;
+    if (list.nextSequence === undefined)
+    {
+        list.nextSequence = next;
+    }
+    if (!Number.isSafeInteger(list.nextSequence) || list.nextSequence < 1 || list.nextSequence > 1000000001)
+    {
+        throw new Error("Ungültiger Nummernzähler der Holzliste");
+    }
 }
 
 function makeId()
@@ -145,11 +138,33 @@ function currentDefaults()
         assortment : fields.assortment.value, length : fields.length.value, grade};
 }
 
+const coniferSpecies = new Set(["Fichte", "Tanne", "Douglasie", "Kiefer", "Lärche", "Fichte/Tanne"]);
+const coniferAssortments = ["Stammholz Nadel lang", "Standardlänge Nadel kurz B/C", "Stammholz Nadel Palette kurz D",
+    "Stammholz Nadel Masten B", "Wertholz Nadel A (B)", "Sonstige", "Brennholz", "Sägeholz"];
+const otherAssortments = ["Sägeholz", "Industrieholz", "Brennholz", "Palisaden", "Mastholz", "Sonstiges"];
+
+function updateAssortments(selected = fields.assortment.value, preserveLegacy = false)
+{
+    const values = coniferSpecies.has(fields.species.value) ? coniferAssortments : otherAssortments;
+    fields.assortment.replaceChildren(new Option("Bitte auswählen", ""));
+    for (const value of values)
+    {
+        fields.assortment.add(new Option(value, value));
+    }
+    if (selected && !values.includes(selected) && preserveLegacy)
+    {
+        const legacy = new Option(`${selected} (Altbestand)`, selected);
+        legacy.hidden = true;
+        fields.assortment.add(legacy);
+    }
+    fields.assortment.value = Array.from(fields.assortment.options).some((option) => option.value === selected) ? selected : "";
+}
+
 function applyDefaults(defaults)
 {
     fields.polter.value = typeof defaults.polter === "string" ? defaults.polter : "";
     fields.species.value = typeof defaults.species === "string" && defaults.species !== "Fichte/Tanne" ? defaults.species : "";
-    fields.assortment.value = typeof defaults.assortment === "string" ? defaults.assortment : "";
+    updateAssortments(typeof defaults.assortment === "string" ? defaults.assortment : "");
     fields.length.value = typeof defaults.length === "string" ? defaults.length : "";
     setGrade([ "A", "B", "C", "D", "K" ].includes(defaults.grade) ? defaults.grade : "");
     if (typeof refreshLocation === "function")
@@ -541,7 +556,7 @@ function startEdit(id)
     fields.number.value = String(entry.number);
     fields.polter.value = entry.polter;
     fields.species.value = entry.species;
-    fields.assortment.value = entry.assortment;
+    updateAssortments(entry.assortment, true);
     fields.diameter.value = String(entry.diameter).replace(".", ",");
     fields.length.value = String(entry.length).replace(".", ",");
     fields.bark.dataset.manual = hasBark(entry) ? "true" : "false";
@@ -573,6 +588,7 @@ function finishEdit()
     {
         fields.species.value = "";
     }
+    updateAssortments();
     clearErrors();
     render();
 }
@@ -670,7 +686,7 @@ form.addEventListener("submit", (event) => {
     }
     const index = entries.findIndex((entry) => entry.id === editingId);
     const list = lists.find((item) => item.id === activeId);
-    const numberingChanged = index < 0 || entries[index].number !== number || polterKey(entries[index].polter) !== polterKey(fields.polter.value);
+    const numberingChanged = index < 0 || entries[index].number !== number;
     const record = {
         id : editingId || makeId(),
         number,
@@ -694,7 +710,7 @@ form.addEventListener("submit", (event) => {
     }
     if (numberingChanged)
     {
-        nextByPolter[polterKey(record.polter)] = number + 1;
+        list.nextSequence = number + 1;
     }
     finishEdit();
     save();
@@ -729,6 +745,10 @@ Object.values(fields).forEach((field) => {
             {
                 element("next-number").textContent = `STAMM ${String(activeListNumber()).padStart(2, "0")}`;
             }
+        }
+        if (field === fields.species)
+        {
+            updateAssortments();
         }
         if (field === fields.diameter || field === fields.species)
         {
@@ -772,8 +792,17 @@ element("create-list").addEventListener("click", () => {
         element("list-name").focus();
         return;
     }
+    const startText = element("list-start").value.trim();
+    const start = Number(startText);
+    if (!/^\d+$/.test(startText) || !Number.isSafeInteger(start) || start < 1 || start > 1000000000)
+    {
+        element("list-start-status").textContent = "Bitte eine Startnummer von 1 bis 1000000000 eingeben.";
+        element("list-start").focus();
+        return;
+    }
+    element("list-start-status").textContent = "";
     const list = {id : makeId(),
-        name, entries : [], defaults : {}};
+        name, entries : [], defaults : {}, nextSequence : start};
     lists.push(list);
     element("list-name").value = "";
     if (!switchList(list.id))
@@ -781,6 +810,10 @@ element("create-list").addEventListener("click", () => {
         lists = lists.filter((item) => item.id !== list.id);
         element("list-name").value = name;
         updateListSelect();
+    }
+    else
+    {
+        element("list-start").value = "1";
     }
 });
 element("delete-list").addEventListener("click", () => {
@@ -801,6 +834,7 @@ element("delete-list").addEventListener("click", () => {
     }
 });
 restore();
+updateAssortments(fields.assortment.value);
 if (storageAvailable)
 {
     element("storage-status").textContent = "Auf diesem Gerät gespeichert";

@@ -84,6 +84,9 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .summary-table th, .summary-table td { text-align: left; border-bottom: 1px solid #e5ece4; padding: 7px 3px; overflow-wrap: anywhere; }
 .summary-table th:not(:first-child), .summary-table td:not(:first-child) { text-align: right; white-space: nowrap; }
 .list-create { margin-top: 17px; }
+.list-start-row { margin-top: 12px; }
+.list-start-row input { max-width: 130px; }
+#list-start-status:empty { display: none; }
 .list-create-row { display: flex; gap: 10px; }
 .list-create-row input { min-width: 0; flex: 1; }
 .list-create-row button { border: 1px solid #28694c; border-radius: 9px; background: #28694c; color: white; font-weight: 700; padding: 0 16px; white-space: nowrap; }
