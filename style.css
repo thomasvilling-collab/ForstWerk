@@ -108,6 +108,14 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .receipt-photo-row img { width: 54px; height: 54px; border-radius: 6px; object-fit: cover; }
 .receipt-photo-row span { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
 .receipt-photo-row button { border: 1px solid #dce6dc; border-radius: 7px; background: #fff; padding: 8px; color: #6d574d; }
+.receipt-crop-dialog { width: min(94vw, 720px); max-width: 720px; max-height: 92dvh; padding: 18px; border: 1px solid #dce6dc; border-radius: 16px; color: #233d33; }
+.receipt-crop-dialog::backdrop { background: #10251dcc; }
+.receipt-crop-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.receipt-crop-heading h2 { margin: 0; font-size: 22px; }
+.receipt-crop-heading button { border: 0; background: transparent; color: #52675a; font-size: 28px; }
+#receipt-crop-canvas { display: block; width: 100%; max-height: 62dvh; margin: 12px auto 0; object-fit: contain; touch-action: none; background: #26372e; border-radius: 8px; }
+.receipt-crop-actions { justify-content: flex-end; }
+@media (max-width: 520px) { .receipt-crop-dialog { padding: 14px; } .receipt-crop-actions button { flex: 1 1 100%; } }
 .import-area h3 { margin-bottom: 14px; }
 .import-area input[type=file] { padding: 10px; height: auto; }
 .import-list { display: flex; gap: 10px; align-items: center; margin: 10px 0; overflow-wrap: anywhere; }

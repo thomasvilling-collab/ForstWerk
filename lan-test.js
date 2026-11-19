@@ -261,28 +261,7 @@ element("lan-send-button").addEventListener("click", () => {
     sendLanPayload("/forstwerk-import", payload, status, "Holzliste");
 });
 
-const receiptFiles = [];
-function renderReceiptPhotos()
-{
-    const target = element("receipt-photo-list");
-    target.replaceChildren();
-    receiptFiles.forEach((file, index) => {
-        const row = document.createElement("div"); row.className = "receipt-photo-row";
-        const image = document.createElement("img"); image.src = URL.createObjectURL(file); image.alt = `Seite ${index + 1}`;
-        const label = document.createElement("span"); label.textContent = `${index + 1}. ${file.name}`;
-        const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "Entfernen";
-        remove.addEventListener("click", () => { receiptFiles.splice(index, 1); renderReceiptPhotos(); });
-        row.append(image, label, remove); target.append(row);
-    });
-}
-element("receipt-photo-input").addEventListener("change", (event) => {
-    for (const file of event.target.files || [])
-    {
-        if (file.type.startsWith("image/")) receiptFiles.push(file);
-    }
-    event.target.value = "";
-    renderReceiptPhotos();
-});
+const receiptFiles = window.receiptPhotoItems;
 
 element("receipt-send-button").addEventListener("click", async () => {
     const status = element("receipt-send-status");
@@ -298,23 +277,16 @@ element("receipt-send-button").addEventListener("click", async () => {
     {
         const files = [];
         let total = 0;
-        for (const [index, file] of receiptFiles.entries())
+        for (const [index, item] of receiptFiles.entries())
         {
-            const bitmap = await createImageBitmap(file);
-            const scale = Math.min(1, 2600 / Math.max(bitmap.width, bitmap.height));
-            const canvas = document.createElement("canvas");
-            canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-            canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-            canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-            bitmap.close();
-            const jpeg = await new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Ein Foto konnte nicht verarbeitet werden.")), "image/jpeg", 0.9));
+            const jpeg = await window.prepareReceiptA4(item);
             const data = await new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
                 reader.onerror = reject; reader.readAsDataURL(jpeg);
             });
             total += Math.ceil(data.length * 3 / 4);
             if (total > 50 * 1024 * 1024) throw new Error("Die Fotos sind zusammen größer als 50 MB.");
-            const base = (file.name || `Beleg_${index + 1}`).replace(/\.[^.]*$/, "");
+            const base = (item.file.name || `Beleg_${index + 1}`).replace(/\.[^.]*$/, "");
             files.push({name : `${base}.jpg`, data});
         }
         const payload = JSON.stringify({format : "BelegWerk-Receipt", version : 1, files});

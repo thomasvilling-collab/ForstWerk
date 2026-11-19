@@ -1,9 +1,9 @@
 "use strict";
 
-const VERSION = "1.3.9";
+const VERSION = "1.4.0";
 const CACHE_NAME = `forstwerk-app-${VERSION}`;
 const FILES = ["./", "./index.html", "./style.css", "./strength.js", "./app.js", "./locations.js",
-    "./exchange.js", "./improvements.js", "./vendor/jsQR.js", "./lan-test.js", "./offline.js",
+    "./exchange.js", "./improvements.js", "./vendor/jsQR.js", "./receipt-crop.js", "./lan-test.js", "./offline.js",
     "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 const SCOPE = new URL(self.registration.scope);
 const INDEX_URL = new URL("index.html", SCOPE).href;

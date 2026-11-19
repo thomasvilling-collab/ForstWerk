@@ -15,6 +15,7 @@
     <script src="exchange.js" defer></script>
     <script src="improvements.js" defer></script>
     <script src="vendor/jsQR.js" defer></script>
+    <script src="receipt-crop.js" defer></script>
     <script src="lan-test.js" defer></script>
     <script src="offline.js" defer></script>
 </head>
@@ -32,7 +33,7 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.3.9</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.4.0</span></small></div>
         <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
 
         <section class="polter-card card" aria-labelledby="polter-heading">
@@ -130,7 +131,7 @@
         </section>
         <section class="exchange-card card" aria-labelledby="receipt-photo-heading">
             <div class="section-top"><div><p class="eyebrow">BELEGE ERFASSEN</p><h2 id="receipt-photo-heading">Beleg fotografieren</h2></div><span class="section-icon" aria-hidden="true">▧</span></div>
-            <p class="list-hint">Ein Beleg kann aus mehreren Fotos bestehen. Öffne in BelegWerk „Foto vom iPhone …“, scanne den QR-Code und sende anschließend die Belegseiten.</p>
+            <p class="list-hint">Ein Beleg kann aus mehreren Fotos bestehen. Öffne in BelegWerk „Foto vom iPhone …“, scanne den QR-Code und sende anschließend die Belegseiten. Jede Seite lässt sich zuschneiden und wird unverzerrt auf A4 eingepasst.</p>
             <div class="exchange-actions"><button type="button" id="receipt-qr-scan">QR-Code lesen</button></div>
             <label class="field-label" for="receipt-photo-input">Belegseiten aufnehmen oder aus der Mediathek auswählen</label>
             <input id="receipt-photo-input" type="file" accept="image/*" capture="environment" multiple>
@@ -140,6 +141,12 @@
         </section>
         <p class="storage-status" id="storage-status" role="status">Auf diesem Gerät gespeichert</p>
     </main>
+    <dialog id="receipt-crop-dialog" class="receipt-crop-dialog">
+        <div class="receipt-crop-heading"><h2>Belegseite zuschneiden</h2><button type="button" id="receipt-crop-cancel-top" aria-label="Schließen">×</button></div>
+        <p class="list-hint">Rahmen ziehen oder an den Ecken anpassen. Der Ausschnitt wird unverzerrt auf eine A4-Seite eingepasst.</p>
+        <canvas id="receipt-crop-canvas" aria-label="Zuschnittrahmen bearbeiten"></canvas>
+        <div class="exchange-actions receipt-crop-actions"><button type="button" id="receipt-crop-reset">Vollbild verwenden</button><button type="button" id="receipt-crop-cancel">Abbrechen</button><button type="button" id="receipt-crop-apply">Zuschnitt übernehmen</button></div>
+    </dialog>
     <div id="print-content" aria-hidden="true"></div>
 </body>
 </html>
