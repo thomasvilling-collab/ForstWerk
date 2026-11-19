@@ -51,6 +51,7 @@ let scanStream = null;
 let scanFrame = 0;
 let scanGeneration = 0;
 let lastScanTime = 0;
+let scanExpectedPath = null;
 
 function stopLanScan()
 {
@@ -71,6 +72,8 @@ function stopLanScan()
     video.hidden = true;
     element("lan-scan-stop").hidden = true;
     element("lan-scan-start").disabled = false;
+    element("receipt-qr-scan").disabled = false;
+    scanExpectedPath = null;
 }
 
 function readLanFrame(timestamp)
@@ -97,6 +100,14 @@ function readLanFrame(timestamp)
                 const parsed = decodeLanQr(found.data);
                 if (parsed)
                 {
+                    if (scanExpectedPath && parsed.path !== scanExpectedPath)
+                    {
+                        element("lan-scan-status").textContent = scanExpectedPath === "/beleg-import"
+                            ? "Das ist kein Beleg-Empfangs-QR-Code. Bitte den QR-Code aus „Foto vom iPhone …“ in BelegWerk scannen."
+                            : "Das ist kein Holzlisten-Empfangs-QR-Code. Bitte den QR-Code aus „Per WLAN empfangen …“ scannen.";
+                        scanFrame = requestAnimationFrame(readLanFrame);
+                        return;
+                    }
                     element("lan-address").value = parsed.address;
                     element("lan-address").dataset.scannedPath = parsed.path;
                     element("lan-code").value = parsed.code;
@@ -120,7 +131,8 @@ function readLanFrame(timestamp)
     scanFrame = requestAnimationFrame(readLanFrame);
 }
 
-element("lan-scan-start").addEventListener("click", async () => {
+async function startLanScan(expectedPath = null)
+{
     const status = element("lan-scan-status");
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof jsQR !== "function")
     {
@@ -128,8 +140,12 @@ element("lan-scan-start").addEventListener("click", async () => {
         return;
     }
     const generation = ++scanGeneration;
+    scanExpectedPath = expectedPath;
     element("lan-scan-start").disabled = true;
-    status.textContent = "Kamera wird geöffnet …";
+    element("receipt-qr-scan").disabled = true;
+    status.textContent = expectedPath === "/beleg-import"
+        ? "Kamera wird geöffnet. BelegWerk-QR-Code vor die Kamera halten …"
+        : "Kamera wird geöffnet …";
     try
     {
         const stream = await navigator.mediaDevices.getUserMedia({video : {facingMode : {ideal : "environment"}}, audio : false});
@@ -142,6 +158,7 @@ element("lan-scan-start").addEventListener("click", async () => {
         const video = element("lan-scan-video");
         video.srcObject = stream;
         video.hidden = false;
+        video.scrollIntoView({behavior : "smooth", block : "center"});
         element("lan-scan-stop").hidden = false;
         await video.play();
         if (generation !== scanGeneration || document.hidden)
@@ -149,7 +166,9 @@ element("lan-scan-start").addEventListener("click", async () => {
             stopLanScan();
             return;
         }
-        status.textContent = "Kamera auf den QR-Code in BelegWerk richten.";
+        status.textContent = expectedPath === "/beleg-import"
+            ? "Kamera auf den Beleg-QR-Code aus BelegWerk richten."
+            : "Kamera auf den QR-Code in BelegWerk richten.";
         lastScanTime = 0;
         scanFrame = requestAnimationFrame(readLanFrame);
     }
@@ -158,7 +177,9 @@ element("lan-scan-start").addEventListener("click", async () => {
         stopLanScan();
         status.textContent = "Kamera nicht verfügbar oder Zugriff abgelehnt. Bitte die Berechtigung prüfen oder Adresse und Code von Hand eingeben.";
     }
-});
+}
+element("lan-scan-start").addEventListener("click", () => startLanScan());
+element("receipt-qr-scan").addEventListener("click", () => startLanScan("/beleg-import"));
 element("lan-scan-stop").addEventListener("click", () => {
     stopLanScan();
     element("lan-scan-status").textContent = "Kamera geschlossen.";
