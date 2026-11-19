@@ -32,7 +32,7 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.3.0</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.3.1</span></small></div>
         <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
 
         <section class="lists-card card" aria-labelledby="lists-heading">
@@ -59,7 +59,7 @@
             </div>
             <div class="defaults-grid">
                 <div><label class="field-label" for="species">Holzart</label><select id="species"><option value="">Bitte auswählen</option><option>Fichte</option><option>Tanne</option><option value="Fichte/Tanne" hidden>Fichte/Tanne (Altbestand)</option><option>Douglasie</option><option>Kiefer</option><option>Lärche</option><option>Buche</option><option>Esche</option><option>Eiche</option><option>Sonstige</option></select></div>
-                <div><label class="field-label" for="assortment">Sortiment</label><select id="assortment"><option value="">Bitte auswählen</option><option>Sägeholz</option><option>Industrieholz</option><option>Brennholz</option><option>Sonstiges</option></select></div>
+                <div><label class="field-label" for="assortment">Sortiment</label><select id="assortment"><option value="">Bitte auswählen</option><option>Sägeholz</option><option>Industrieholz</option><option>Brennholz</option><option>Palisaden</option><option>Mastholz</option><option>Sonstiges</option></select></div>
             </div>
         </section>
 
@@ -115,24 +115,15 @@
             <div class="import-area"><h3>Holzlisten importieren</h3><label class="field-label" for="import-file">ForstWerk-JSON auswählen</label><input id="import-file" type="file" accept=".json,application/json"><div id="import-preview" hidden><p id="import-summary"></p><div id="import-lists"></div><button type="button" id="import-confirm">Ausgewählte Listen importieren</button></div><p id="import-status" role="status"></p></div>
         </section>
         <section class="exchange-card card" aria-labelledby="lan-test-heading">
-            <div class="section-top"><div><p class="eyebrow">DIREKTVERBINDUNG</p><h2 id="lan-test-heading">Holzliste per WLAN senden</h2></div><span class="section-icon" aria-hidden="true">↔</span></div>
-            <p class="list-hint">In BelegWerk im gewünschten Angebot oder Auftrag „Per WLAN empfangen …“ öffnen. Beide Geräte müssen im gleichen WLAN sein. Die Übertragung ist unverschlüsselt; nur in einem vertrauenswürdigen Netzwerk verwenden.</p>
+            <div class="section-top"><div><p class="eyebrow">DIREKTVERBINDUNG</p><h2 id="lan-test-heading">WLAN-Verbindung testen</h2></div><span class="section-icon" aria-hidden="true">↔</span></div>
+            <p class="list-hint">In BelegWerk auf der Übersichtsseite den WLAN-Test öffnen. Beide Geräte müssen im gleichen Netzwerk sein. Es werden keine Holzlisten gesendet.</p>
             <div class="exchange-actions"><button type="button" id="lan-scan-start">QR-Code scannen</button><button type="button" id="lan-scan-stop" hidden>Kamera schließen</button></div>
             <video id="lan-scan-video" playsinline muted hidden></video><canvas id="lan-scan-canvas" hidden></canvas>
             <p id="lan-scan-status" class="list-hint" role="status"></p>
             <label class="field-label" for="lan-address">Adresse aus BelegWerk</label><input id="lan-address" type="text" inputmode="url" autocomplete="off" placeholder="z. B. 192.168.1.20:54321">
-            <label class="field-label lan-code-label" for="lan-code">Einmaliger Code</label><input id="lan-code" type="text" maxlength="16" autocapitalize="none" autocomplete="off" placeholder="16 Zeichen">
-            <div class="exchange-actions"><button type="button" id="lan-send-button">Ausgewählte Holzliste(n) senden</button></div>
-            <p id="lan-test-status" class="list-hint" role="status"></p>
-        </section>
-        <section class="exchange-card card" aria-labelledby="receipt-photo-heading">
-            <div class="section-top"><div><p class="eyebrow">BELEGE ERFASSEN</p><h2 id="receipt-photo-heading">Beleg fotografieren</h2></div><span class="section-icon" aria-hidden="true">▧</span></div>
-            <p class="list-hint">Ein Beleg kann aus mehreren Fotos bestehen, zum Beispiel Vorder- und Rückseite oder mehrere Rechnungsseiten. Öffne in BelegWerk „Foto vom iPhone …“, scanne den dortigen QR-Code und sende dann die Fotos.</p>
-            <label class="field-label" for="receipt-photo-input">Belegseiten aufnehmen oder auswählen</label>
-            <input id="receipt-photo-input" type="file" accept="image/*" capture="environment" multiple>
-            <div id="receipt-photo-list" class="receipt-photo-list"></div>
-            <div class="exchange-actions"><button type="button" id="receipt-send-button">Belegfotos an BelegWerk senden</button></div>
-            <p id="receipt-send-status" class="list-hint" role="status"></p>
+            <label class="field-label lan-code-label" for="lan-code">Testcode</label><input id="lan-code" type="text" maxlength="8" autocapitalize="none" autocomplete="off" placeholder="8 Zeichen">
+            <div class="exchange-actions"><button type="button" id="lan-test-button">Verbindung prüfen</button></div>
+            <p id="lan-test-status" class="list-hint" role="status"></p><a id="lan-diagnostic" target="_blank" rel="noopener noreferrer" hidden>Testadresse in einem neuen Fenster öffnen</a>
         </section>
         <p class="storage-status" id="storage-status" role="status">Auf diesem Gerät gespeichert</p>
     </main>
