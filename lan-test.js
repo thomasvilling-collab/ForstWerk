@@ -19,7 +19,7 @@ function lanProbeUrl(address, code, path = "/forstwerk-test")
     const url = new URL(trimmed.includes("://") ? trimmed : `http://${trimmed}`);
     if (url.protocol !== "http:" || !isPrivateIpv4(url.hostname) || !url.port ||
         url.username || url.password || !/^([0-9a-f]{16})$/i.test(code) ||
-        !["/forstwerk-test", "/forstwerk-import"].includes(path))
+        !["/forstwerk-test", "/forstwerk-import", "/beleg-import"].includes(path))
     {
         throw new Error("Bitte eine private IPv4-Adresse mit Port und den 16-stelligen Code eingeben.");
     }
@@ -33,7 +33,7 @@ function decodeLanQr(value)
     {
         const url = new URL(value);
         const code = url.searchParams.get("code") || "";
-        if (!["/forstwerk-test", "/forstwerk-import"].includes(url.pathname) || url.username || url.password ||
+        if (!["/forstwerk-test", "/forstwerk-import", "/beleg-import"].includes(url.pathname) || url.username || url.password ||
             url.searchParams.getAll("code").length !== 1)
         {
             return null;
@@ -102,7 +102,9 @@ function readLanFrame(timestamp)
                     element("lan-code").value = parsed.code;
                     element("lan-test-status").textContent = "";
                     stopLanScan();
-                    element("lan-scan-status").textContent = "QR-Code für den WLAN-Empfang erkannt. Zum Übertragen auf „Ausgewählte Holzliste(n) senden“ tippen.";
+                    element("lan-scan-status").textContent = parsed.path === "/beleg-import"
+                        ? "Beleg-Empfang erkannt. Belegfotos aufnehmen und auf „Belegfotos an BelegWerk senden“ tippen."
+                        : "Holzlisten-Empfang erkannt. Zum Übertragen auf „Ausgewählte Holzliste(n) senden“ tippen.";
                     return;
                 }
                 element("lan-scan-status").textContent = "Dieser QR-Code enthält keine gültige BelegWerk-WLAN-Adresse.";
@@ -179,6 +181,20 @@ for (const field of [element("lan-address"), element("lan-code")])
     });
 }
 
+function sendLanPayload(path, payload, status, label)
+{
+    const address = element("lan-address").value;
+    let endpoint;
+    try { endpoint = lanProbeUrl(address, element("lan-code").value.trim(), path); }
+    catch (error) { status.textContent = error.message || "WLAN-Adresse oder Code ungültig."; return; }
+    const form = document.createElement("form");
+    form.method = "POST"; form.action = endpoint; form.enctype = "application/x-www-form-urlencoded";
+    form.target = "_blank"; form.referrerPolicy = "no-referrer"; form.setAttribute("rel", "noopener noreferrer"); form.hidden = true;
+    const field = document.createElement("input"); field.type = "hidden"; field.name = "payload"; field.value = payload;
+    form.append(field); document.body.append(form); status.textContent = `${label} wird an BelegWerk gesendet …`;
+    form.submit(); form.remove();
+}
+
 element("lan-send-button").addEventListener("click", () => {
     const status = element("lan-test-status");
     let endpoint;
@@ -221,21 +237,63 @@ element("lan-send-button").addEventListener("click", () => {
         return;
     }
 
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = endpoint;
-    form.enctype = "application/x-www-form-urlencoded";
-    form.target = "_blank";
-    form.referrerPolicy = "no-referrer";
-    form.setAttribute("rel", "noopener noreferrer");
-    form.hidden = true;
-    const field = document.createElement("input");
-    field.type = "hidden";
-    field.name = "payload";
-    field.value = payload;
-    form.append(field);
-    document.body.append(form);
-    status.textContent = "Holzliste wird an BelegWerk gesendet … Die Empfangsbestätigung erscheint in einem neuen Fenster.";
-    form.submit();
-    form.remove();
+    sendLanPayload("/forstwerk-import", payload, status, "Holzliste");
+});
+
+const receiptFiles = [];
+function renderReceiptPhotos()
+{
+    const target = element("receipt-photo-list");
+    target.replaceChildren();
+    receiptFiles.forEach((file, index) => {
+        const row = document.createElement("div"); row.className = "receipt-photo-row";
+        const image = document.createElement("img"); image.src = URL.createObjectURL(file); image.alt = `Seite ${index + 1}`;
+        const label = document.createElement("span"); label.textContent = `${index + 1}. ${file.name}`;
+        const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "Entfernen";
+        remove.addEventListener("click", () => { receiptFiles.splice(index, 1); renderReceiptPhotos(); });
+        row.append(image, label, remove); target.append(row);
+    });
+}
+element("receipt-photo-input").addEventListener("change", (event) => {
+    for (const file of event.target.files || [])
+    {
+        if (file.type.startsWith("image/")) receiptFiles.push(file);
+    }
+    event.target.value = "";
+    renderReceiptPhotos();
+});
+
+element("receipt-send-button").addEventListener("click", async () => {
+    const status = element("receipt-send-status");
+    if (!receiptFiles.length) { status.textContent = "Bitte zuerst mindestens ein Belegfoto aufnehmen."; return; }
+    try
+    {
+        const files = [];
+        let total = 0;
+        for (const [index, file] of receiptFiles.entries())
+        {
+            const bitmap = await createImageBitmap(file);
+            const scale = Math.min(1, 2600 / Math.max(bitmap.width, bitmap.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+            canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+            canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+            bitmap.close();
+            const jpeg = await new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Ein Foto konnte nicht verarbeitet werden.")), "image/jpeg", 0.9));
+            const data = await new Promise((resolve, reject) => {
+                const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+                reader.onerror = reject; reader.readAsDataURL(jpeg);
+            });
+            total += Math.ceil(data.length * 3 / 4);
+            if (total > 50 * 1024 * 1024) throw new Error("Die Fotos sind zusammen größer als 50 MB.");
+            const base = (file.name || `Beleg_${index + 1}`).replace(/\.[^.]*$/, "");
+            files.push({name : `${base}.jpg`, data});
+        }
+        const payload = JSON.stringify({format : "BelegWerk-Receipt", version : 1, files});
+        if (new Blob([payload]).size > 52 * 1024 * 1024) throw new Error("Die Fotos sind für die WLAN-Übertragung zu groß.");
+        if (element("lan-address").dataset.scannedPath && element("lan-address").dataset.scannedPath !== "/beleg-import")
+            throw new Error("Bitte den Beleg-QR-Code in BelegWerk scannen.");
+        sendLanPayload("/beleg-import", payload, status, "Belegfotos");
+    }
+    catch (error) { status.textContent = error.message || "Die Belegfotos konnten nicht vorbereitet werden."; }
 });
