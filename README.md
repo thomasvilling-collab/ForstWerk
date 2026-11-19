@@ -56,9 +56,11 @@ In CSV und PDF stehen Polter und Sortiment im Kopf des jeweiligen Abschnitts. En
 
 Stammnummern gelten innerhalb einer Liste, bleiben beim Bearbeiten erhalten und werden nach dem Löschen nicht erneut vergeben. Alte Listen werden beim ersten Laden in ihrer damaligen Reihenfolge nummeriert. Für ungewöhnliche Maße gelten einstellbare Hinweisgrenzen; nach Bestätigung können sie gespeichert werden. „Alle Listen sichern“ startet den Download einer JSON-Datei; die erfolgreiche Ablage der Datei muss geprüft werden. Der Sicherungshinweis erinnert nach sieben Tagen erneut.
 
-## Polterstandorte
+## Polter und Standorte
 
-Zu jeder Polterbezeichnung innerhalb einer Holzliste kann optional ein Standort eingegeben oder mit „Standort übernehmen“ ermittelt werden. Dieselbe Bezeichnung in einer anderen Holzliste hat einen eigenen Standort. Zum Übernehmen muss die Browserfreigabe für den Standort erteilt sein. Auf dem iPhone benötigt die Standortermittlung eine geeignete HTTPS-Adresse; `localhost` eignet sich für lokale Tests am PC. Ohne Verbindung können Koordinaten von Hand eingegeben werden. Der Kartenlink benötigt eine Verbindung. Standorte werden mit der JSON-Liste gesichert und in CSV und PDF ausgegeben, sofern vorhanden.
+Die Auswahl des Polters filtert die verfügbaren Holzlisten. Neue Listen werden dem ausgewählten Polter zugeordnet. Ältere Listen, die Stämme aus mehreren Poltern enthalten, erscheinen bei den jeweiligen Poltern; ihre Stämme bleiben zusammen in der ursprünglichen Liste.
+
+Jede Holzliste kann einen eigenen Standort erhalten. Bisher pro Polter gespeicherte Koordinaten bleiben in den Daten erhalten und können ausdrücklich als Standort der Holzliste bestätigt werden. Bis dahin werden die bisherigen Koordinaten beim Export weiterhin je Polter verwendet. Zum Ermitteln ist die Browserfreigabe für den Standort nötig. Auf dem iPhone benötigt die Standortermittlung HTTPS; `localhost` eignet sich für lokale Tests am PC. Koordinaten können auch von Hand eingegeben werden. Der Kartenlink benötigt eine Verbindung. Standorte werden mit der JSON-Liste gesichert und in CSV und PDF ausgegeben.
 
 Beim JSON-Import zeigt eine Vorschau die verfügbaren Listen. Ausgewählte neue Listen werden zusätzlich angelegt; vorhandene Listen mit gleicher Kennung werden nicht überschrieben oder erneut importiert. Ein Import in BelegWerk ist noch nicht umgesetzt.
 

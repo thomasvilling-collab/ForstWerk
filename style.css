@@ -53,6 +53,8 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .location-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .location-grid input { padding: 0 9px; }
 .location-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#confirm-legacy-location { border: 1px solid #cddfce; background: white; color: #315b40; border-radius: 8px; padding: 9px 10px; margin-top: 8px; font-size: 12px; font-weight: 700; }
+#legacy-location-choice { margin-top: 12px; }
 .location-actions button { border: 1px solid #cddfce; background: white; color: #315b40; border-radius: 8px; padding: 9px 10px; font-size: 12px; font-weight: 700; }
 #location-map { display: inline-block; color: #28694c; font-size: 12px; font-weight: 700; }
 #location-map[hidden] { display: none; }
@@ -65,8 +67,8 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .backup-panel strong { font-size: 13px; }
 .backup-panel span { margin-top: 4px; font-size: 12px; color: #728176; }
 .backup-panel button, #save-settings { border: 1px solid #28694c; border-radius: 8px; background: #28694c; color: white; font-weight: 700; padding: 10px 12px; }
-.lists-card { grid-column: 1 / -1; grid-row: 4; }
-.polter-card { grid-column: 1; grid-row: 5; }
+.polter-card { grid-column: 1 / -1; grid-row: 4; }
+.lists-card { grid-column: 1; grid-row: 5; }
 .entry-card { grid-column: 1; grid-row: 6; }
 .overview { grid-column: 2; grid-row: 5 / 7; }
 .capture-settings, .summary-panel { margin-top: 20px; border-top: 1px solid #e5ece4; padding-top: 15px; }

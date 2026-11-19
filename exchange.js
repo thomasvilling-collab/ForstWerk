@@ -15,7 +15,7 @@ function selectedLists()
         const ids = new Set(Array.from(element("export-selection").querySelectorAll("input:checked"), (input) => input.value));
         return lists.filter((list) => ids.has(list.id));
     }
-    return lists.filter((list) => list.id === activeId);
+    return noActiveList ? [] : lists.filter((list) => list.id === activeId);
 }
 
 function canExport()
@@ -227,7 +227,7 @@ function validImport(data)
     return data.lists.every((list) => {
         if (!list || typeof list.id !== "string" || !list.id || listIds.has(list.id) ||
             typeof list.name !== "string" || !list.name.trim() || !Array.isArray(list.entries) ||
-            !list.defaults || typeof list.defaults !== "object" || Array.isArray(list.defaults) || !validLocations(list.locations))
+            !list.defaults || typeof list.defaults !== "object" || Array.isArray(list.defaults) || !validLocations(list.locations) || !validListLocation(list.location))
         {
             return false;
         }

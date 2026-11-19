@@ -66,7 +66,7 @@ function unsavedWork()
     {
         return true;
     }
-    const location = polterLocation(activeList(), fields.polter.value.trim());
+    const location = listLocation(activeList());
     const latitudeText = element("latitude").value.trim();
     const longitudeText = element("longitude").value.trim();
     const latitude = readCoordinate(latitudeText);

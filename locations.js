@@ -4,25 +4,46 @@ let locationRequest = 0;
 
 function activeList()
 {
-    return lists.find((list) => list.id === activeId);
+    return noActiveList ? null : lists.find((list) => list.id === activeId);
+}
+
+function listLocation(list)
+{
+    return list && validListLocation(list.location) ? list.location || null : null;
 }
 
 function polterLocation(list, name)
 {
-    return (list.locations || []).find((location) => location.name === name.trim());
+    if (!list)
+    {
+        return null;
+    }
+    if (Object.prototype.hasOwnProperty.call(list, "location"))
+    {
+        return listLocation(list);
+    }
+    return (list.locations || []).find((location) => location.name === name.trim()) || null;
 }
 
 function refreshLocation()
 {
     locationRequest++;
     const list = activeList();
-    const name = fields.polter.value.trim();
-    const location = polterLocation(list, name);
+    const location = listLocation(list);
     element("latitude").value = location ? String(location.latitude).replace(".", ",") : "";
     element("longitude").value = location ? String(location.longitude).replace(".", ",") : "";
+    const legacy = list && !Object.prototype.hasOwnProperty.call(list, "location") ? (list.locations || []) : [];
+    const choice = element("legacy-location-choice");
+    choice.hidden = !legacy.length;
+    const select = element("legacy-location");
+    select.replaceChildren(new Option("Bitte Standort auswählen", ""));
+    legacy.forEach((item, index) => {
+        select.add(new Option(`${item.name}: ${item.latitude.toLocaleString("de-DE")} / ${item.longitude.toLocaleString("de-DE")}`, String(index)));
+    });
     const status = element("location-status");
-    status.textContent = location ? (location.accuracy == null ? "Standort gespeichert." :
-        `Standort gespeichert · geschätzte Genauigkeit ±${Math.round(location.accuracy)} m`) : "";
+    status.textContent = legacy.length ? "Bisherige Standorte sind erhalten. Bitte einen Standort für die Holzliste auswählen und bestätigen." :
+        location ? (location.accuracy == null ? "Standort der Holzliste gespeichert." :
+            `Standort der Holzliste gespeichert · geschätzte Genauigkeit ±${Math.round(location.accuracy)} m`) : "";
     const map = element("location-map");
     map.hidden = !location;
     if (location)
@@ -35,42 +56,29 @@ function refreshLocation()
     }
     const suggestions = element("polter-suggestions");
     suggestions.replaceChildren();
-    const names = new Set([...list.entries.map((entry) => entry.polter), ...(list.locations || []).map((item) => item.name)]);
-    names.forEach((value) => {
-        const option = document.createElement("option");
-        option.value = value;
-        suggestions.append(option);
-    });
+    const names = new Map();
+    for (const item of lists)
+    {
+        for (const name of listPolters(item))
+        {
+            names.set(polterKey(name), name);
+        }
+    }
+    for (const name of names.values())
+    {
+        suggestions.append(new Option(name, name));
+    }
 }
 
 function storeLocation(latitude, longitude, accuracy)
 {
-    const name = fields.polter.value.trim();
-    if (!name)
+    if (storageBlocked || noActiveList)
     {
-        element("location-status").textContent = "Bitte zuerst eine Polterbezeichnung eingeben.";
-        fields.polter.focus();
-        return;
-    }
-    if (storageBlocked)
-    {
-        element("location-status").textContent = "Standort kann nicht gespeichert werden: vorhandene Browserdaten sind nicht lesbar.";
+        element("location-status").textContent = "Standort kann nicht gespeichert werden. Bitte zuerst eine Holzliste auswählen.";
         return;
     }
     const list = activeList();
-    if (!list.locations)
-    {
-        list.locations = [];
-    }
-    const previous = polterLocation(list, name);
-    if (previous)
-    {
-        Object.assign(previous, {latitude, longitude, accuracy});
-    }
-    else
-    {
-        list.locations.push({name, latitude, longitude, accuracy});
-    }
+    list.location = {latitude, longitude, accuracy};
     save();
     refreshLocation();
     if (!storageAvailable)
@@ -89,7 +97,6 @@ function readCoordinate(value)
     return Number(text);
 }
 
-fields.polter.addEventListener("input", refreshLocation);
 element("latitude").addEventListener("input", () => { locationRequest++; });
 element("longitude").addEventListener("input", () => { locationRequest++; });
 element("save-location").addEventListener("click", () => {
@@ -103,13 +110,6 @@ element("save-location").addEventListener("click", () => {
     storeLocation(latitude, longitude, null);
 });
 element("get-location").addEventListener("click", () => {
-    const name = fields.polter.value.trim();
-    if (!name)
-    {
-        element("location-status").textContent = "Bitte zuerst eine Polterbezeichnung eingeben.";
-        fields.polter.focus();
-        return;
-    }
     if (!navigator.geolocation)
     {
         element("location-status").textContent = "Standortermittlung nicht verfügbar. Koordinaten können von Hand eingegeben werden.";
@@ -119,7 +119,7 @@ element("get-location").addEventListener("click", () => {
     const listId = activeId;
     element("location-status").textContent = "Standort wird ermittelt …";
     navigator.geolocation.getCurrentPosition((position) => {
-        if (request !== locationRequest || listId !== activeId || name !== fields.polter.value.trim())
+        if (request !== locationRequest || noActiveList || listId !== activeId)
         {
             return;
         }
@@ -133,19 +133,33 @@ element("get-location").addEventListener("click", () => {
             "Standort konnte nicht ermittelt werden. Bitte erneut versuchen oder Koordinaten eingeben.";
     }, {enableHighAccuracy : true, timeout : 20000, maximumAge : 0});
 });
+element("confirm-legacy-location").addEventListener("click", () => {
+    const list = activeList();
+    const index = element("legacy-location").value;
+    if (!list || index === "" || !list.locations || !list.locations[Number(index)])
+    {
+        element("location-status").textContent = "Bitte zuerst einen bisherigen Standort auswählen.";
+        return;
+    }
+    const legacy = list.locations[Number(index)];
+    if (!window.confirm(`Standort von „${legacy.name}“ für die gesamte Holzliste übernehmen?`))
+    {
+        return;
+    }
+    storeLocation(legacy.latitude, legacy.longitude, legacy.accuracy == null ? null : legacy.accuracy);
+});
 element("clear-location").addEventListener("click", () => {
     const list = activeList();
-    const name = fields.polter.value.trim();
-    if (!polterLocation(list, name))
+    if (!list || !listLocation(list))
     {
-        element("location-status").textContent = "Für diesen Polter ist kein Standort gespeichert.";
+        element("location-status").textContent = "Für diese Holzliste ist kein bestätigter Standort gespeichert.";
         return;
     }
-    if (!window.confirm(`Standort für „${name}“ entfernen?`))
+    if (!window.confirm("Standort dieser Holzliste entfernen?"))
     {
         return;
     }
-    list.locations = list.locations.filter((item) => item.name !== name);
+    list.location = null;
     save();
     refreshLocation();
 });

@@ -32,30 +32,30 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.3.3</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.3.4</span></small></div>
         <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
-
-        <section class="lists-card card" aria-labelledby="lists-heading">
-            <div class="section-top"><div><p class="eyebrow">VERKAUFSSORTIMENTE</p><h2 id="lists-heading">Meine Holzlisten</h2></div><span class="section-icon" aria-hidden="true">≡</span></div>
-            <label class="field-label" for="list-select">Aktive Holzliste</label>
-            <select id="list-select"></select>
-            <div class="list-create"><label class="field-label" for="list-name">Neue Holzliste</label><input id="list-name" maxlength="100" placeholder="z. B. Fichte Sägeholz" autocomplete="off"><div class="list-start-row"><label class="field-label" for="list-start">Startnummer für neue Liste</label><div class="list-create-row"><input id="list-start" type="text" inputmode="numeric" value="1" autocomplete="off"><button id="create-list" type="button">Liste anlegen</button></div><p id="list-start-status" class="form-error" role="alert"></p></div></div>
-            <p class="list-hint">Jede Liste hat eine eigene fortlaufende Nummerierung.</p>
-            <button id="rename-list" class="text-button" type="button">Liste umbenennen</button>
-            <button id="delete-list" class="text-button list-delete" type="button">Aktive Liste löschen</button>
-        </section>
 
         <section class="polter-card card" aria-labelledby="polter-heading">
             <div class="section-top"><div><p class="eyebrow">AKTUELLE AUFNAHME</p><h2 id="polter-heading">Dein Polter</h2></div><span class="section-icon" aria-hidden="true">✳</span></div>
             <label class="field-label" for="polter">Polterbezeichnung</label>
             <input id="polter" type="text" maxlength="100" placeholder="z. B. Waldweg Nord" autocomplete="off" list="polter-suggestions">
             <datalist id="polter-suggestions"></datalist>
+        </section>
+
+        <section class="lists-card card" aria-labelledby="lists-heading">
+            <div class="section-top"><div><p class="eyebrow">VERKAUFSSORTIMENTE</p><h2 id="lists-heading">Meine Holzlisten</h2></div><span class="section-icon" aria-hidden="true">≡</span></div>
+            <label class="field-label" for="list-select">Aktive Holzliste</label>
+            <select id="list-select"></select><p id="list-context" class="list-hint" role="status"></p>
+            <div class="list-create"><label class="field-label" for="list-name">Neue Holzliste</label><input id="list-name" maxlength="100" placeholder="z. B. Fichte Sägeholz" autocomplete="off"><div class="list-start-row"><label class="field-label" for="list-start">Startnummer für neue Liste</label><div class="list-create-row"><input id="list-start" type="text" inputmode="numeric" value="1" autocomplete="off"><button id="create-list" type="button">Liste anlegen</button></div><p id="list-start-status" class="form-error" role="alert"></p></div></div>
+            <p class="list-hint">Jede Liste hat eine eigene fortlaufende Nummerierung.</p>
+            <button id="rename-list" class="text-button" type="button">Liste umbenennen</button>
+            <button id="delete-list" class="text-button list-delete" type="button">Aktive Liste löschen</button>
             <div class="location-box">
-                <div class="location-heading"><strong>Standort des Polters</strong><span>Optional</span></div>
-                <p class="location-hint">Koordinaten gelten für die Polterbezeichnung in dieser Holzliste.</p>
+                <div class="location-heading"><strong>Standort der Holzliste</strong><span>Optional</span></div>
+                <p class="location-hint">Die Koordinaten gehören zur aktiven Holzliste.</p>
                 <div class="location-grid"><div><label class="field-label" for="latitude">Breitengrad</label><input id="latitude" inputmode="decimal" placeholder="z. B. 48,123456" autocomplete="off"></div><div><label class="field-label" for="longitude">Längengrad</label><input id="longitude" inputmode="decimal" placeholder="z. B. 8,765432" autocomplete="off"></div></div>
                 <div class="location-actions"><button type="button" id="get-location">📍 Standort übernehmen</button><button type="button" id="save-location">Koordinaten speichern</button><button type="button" id="clear-location">Standort entfernen</button></div>
-                <p id="location-status" class="location-hint" role="status"></p><a id="location-map" target="_blank" rel="noopener noreferrer" hidden>In Karte öffnen ↗</a>
+                <div id="legacy-location-choice" hidden><label class="field-label" for="legacy-location">Bisherigen Standort für diese Holzliste auswählen</label><select id="legacy-location"></select><button type="button" id="confirm-legacy-location">Standort für Holzliste übernehmen</button></div><p id="location-status" class="location-hint" role="status"></p><a id="location-map" target="_blank" rel="noopener noreferrer" hidden>In Karte öffnen ↗</a>
             </div>
             <div class="defaults-grid">
                 <div><label class="field-label" for="species">Holzart</label><select id="species"><option value="">Bitte auswählen</option><option>Fichte</option><option>Tanne</option><option value="Fichte/Tanne" hidden>Fichte/Tanne (Altbestand)</option><option>Douglasie</option><option>Kiefer</option><option>Lärche</option><option>Buche</option><option>Esche</option><option>Eiche</option><option>Sonstige</option></select></div>

@@ -5,7 +5,7 @@ const backupKey = "forstwerk.sicherung.gestartet";
 function updateBackupReminder()
 {
     const label = element("backup-reminder");
-    if (!lists.some((list) => list.entries.length || (list.locations && list.locations.length)))
+    if (!lists.some((list) => list.entries.length || (list.location || (list.locations && list.locations.length))))
     {
         label.textContent = "Sichere deine Listen regelmäßig als JSON-Datei.";
         return;

@@ -26,6 +26,8 @@ let activeId = lists[0].id;
 let limits = {diameterMin : 5, diameterMax : 100, lengthMin : 1, lengthMax : 20};
 let nextFocus = "diameter";
 let nextByPolter = Object.create(null);
+let selectedPolter = "";
+let noActiveList = false;
 
 function validLimits(value)
 {
@@ -107,6 +109,14 @@ function makeId()
     return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 }
 
+function validListLocation(location)
+{
+    return location === undefined || location === null || (typeof location === "object" && !Array.isArray(location) &&
+        Number.isFinite(location.latitude) && location.latitude >= -90 && location.latitude <= 90 &&
+        Number.isFinite(location.longitude) && location.longitude >= -180 && location.longitude <= 180 &&
+        (location.accuracy == null || (Number.isFinite(location.accuracy) && location.accuracy >= 0)));
+}
+
 function validLocations(locations)
 {
     if (locations === undefined)
@@ -173,22 +183,83 @@ function applyDefaults(defaults)
     }
 }
 
+function listPolters(list)
+{
+    if (typeof list.polterName === "string" && list.polterName.trim())
+    {
+        return [list.polterName.trim()];
+    }
+    const names = new Map();
+    for (const entry of list.entries)
+    {
+        if (entry.polter.trim())
+        {
+            names.set(polterKey(entry.polter), entry.polter.trim());
+        }
+    }
+    if (list.defaults && typeof list.defaults.polter === "string" && list.defaults.polter.trim())
+    {
+        names.set(polterKey(list.defaults.polter), list.defaults.polter.trim());
+    }
+    return Array.from(names.values());
+}
+
+function matchesPolter(list, name)
+{
+    if (!name.trim())
+    {
+        return true;
+    }
+    return listPolters(list).some((value) => polterKey(value) === polterKey(name));
+}
+
 function updateListSelect()
 {
     const select = element("list-select");
     select.replaceChildren();
-    lists.forEach((list) => {
+    const matching = lists.filter((list) => matchesPolter(list, selectedPolter));
+    if (noActiveList)
+    {
+        select.add(new Option("Keine Holzliste für diesen Polter", ""));
+    }
+    matching.forEach((list) => {
         const option = document.createElement("option");
         option.value = list.id;
         option.textContent = `${list.name} (${list.entries.length} ${list.entries.length === 1 ? "Stamm" : "Stämme"})`;
         select.append(option);
     });
-    select.value = activeId;
-    element("delete-list").disabled = lists.length === 1;
+    select.value = noActiveList ? "" : activeId;
+    element("delete-list").disabled = noActiveList || lists.length === 1;
+    element("rename-list").disabled = noActiveList;
+    element("list-select").disabled = matching.length === 0;
+    const active = noActiveList ? null : lists.find((list) => list.id === activeId);
+    const mixed = active && listPolters(active).length > 1;
+    element("list-context").textContent = noActiveList ? "Für diesen Polter gibt es noch keine Holzliste. Lege unten eine neue Liste an." :
+        mixed ? "Altbestand: Diese Liste enthält mehrere Polter und zeigt weiterhin alle zugehörigen Stämme." : "";
+    document.querySelector(".entry-card").hidden = noActiveList;
+    document.querySelector(".overview").hidden = noActiveList;
+    document.querySelector(".location-box").hidden = noActiveList;
+    document.querySelector(".defaults-grid").hidden = noActiveList;
     if (typeof refreshExportSelection === "function")
     {
         refreshExportSelection();
     }
+}
+
+function hasUnsavedLocation()
+{
+    if (noActiveList || typeof listLocation !== "function")
+    {
+        return false;
+    }
+    const current = listLocation(activeList());
+    const latitudeText = element("latitude").value.trim();
+    const longitudeText = element("longitude").value.trim();
+    if (!current)
+    {
+        return Boolean(latitudeText || longitudeText);
+    }
+    return readCoordinate(latitudeText) !== current.latitude || readCoordinate(longitudeText) !== current.longitude;
 }
 
 function switchList(id)
@@ -198,17 +269,26 @@ function switchList(id)
     {
         return false;
     }
-    if ((editingId || fields.diameter.value.trim() || fields.number.value.trim() || element("review-bark").open) &&
-        !window.confirm("Die ungespeicherte Stammbearbeitung verwerfen und die Liste wechseln?"))
+    if ((editingId || fields.diameter.value.trim() || fields.number.value.trim() || element("review-bark").open || hasUnsavedLocation()) &&
+        !window.confirm("Ungespeicherte Stamm- oder Standorteingaben verwerfen und die Liste wechseln?"))
     {
         updateListSelect();
         return false;
     }
-    save();
-    finishEdit();
+    if (!noActiveList)
+    {
+        save();
+        finishEdit();
+    }
+    noActiveList = false;
     activeId = id;
     entries = target.entries;
     applyDefaults(target.defaults);
+    fields.polter.value = selectedPolter;
+    if (typeof refreshLocation === "function")
+    {
+        refreshLocation();
+    }
     fields.diameter.value = "";
     save();
     render();
@@ -333,9 +413,12 @@ function save()
     {
         return;
     }
-    const active = lists.find((list) => list.id === activeId);
-    active.entries = entries;
-    active.defaults = currentDefaults();
+    if (!noActiveList)
+    {
+        const active = lists.find((list) => list.id === activeId);
+        active.entries = entries;
+        active.defaults = currentDefaults();
+    }
     const state = {version : 2, lists, activeId, limits, nextFocus, nextByPolter};
     updateListSelect();
     try
@@ -381,7 +464,7 @@ function restore()
             if (!list || typeof list.id !== "string" || !list.id || ids.has(list.id) ||
                 typeof list.name !== "string" || !list.name.trim() || !Array.isArray(list.entries) ||
                 !list.defaults || typeof list.defaults !== "object" || Array.isArray(list.defaults) ||
-                !validLocations(list.locations))
+                !validLocations(list.locations) || !validListLocation(list.location))
             {
                 throw new Error("Ungültige Liste");
             }
@@ -428,6 +511,7 @@ function restore()
             nextFocus = state.nextFocus;
         }
         applyDefaults(active.defaults);
+        selectedPolter = fields.polter.value.trim();
     }
     catch (error)
     {
@@ -555,6 +639,7 @@ function startEdit(id)
     editingId = id;
     fields.number.value = String(entry.number);
     fields.polter.value = entry.polter;
+    selectedPolter = entry.polter.trim();
     fields.species.value = entry.species;
     updateAssortments(entry.assortment, true);
     fields.diameter.value = String(entry.diameter).replace(".", ",");
@@ -570,6 +655,7 @@ function startEdit(id)
     element("submit-entry").querySelector("span:nth-child(2)").textContent = "Änderung speichern";
     element("cancel-edit").hidden = false;
     clearErrors();
+    updateListSelect();
     render();
     element("entry-heading").scrollIntoView({behavior : "smooth", block : "start"});
     fields.diameter.focus({preventScroll : true});
@@ -756,18 +842,65 @@ Object.values(fields).forEach((field) => {
         }
         setVolume();
         updateLengthButtons();
-        if (field !== fields.diameter)
+        if (field !== fields.diameter && field !== fields.polter)
         {
             save();
         }
     });
     field.addEventListener("change", () => {
         field.removeAttribute("aria-invalid");
-        if (field !== fields.diameter)
+        if (field !== fields.diameter && field !== fields.polter)
         {
             save();
         }
     });
+});
+fields.polter.addEventListener("change", () => {
+    const wanted = fields.polter.value.trim();
+    if (polterKey(wanted) === polterKey(selectedPolter))
+    {
+        fields.polter.value = wanted;
+        selectedPolter = wanted;
+        save();
+        return;
+    }
+    if (!noActiveList && (editingId || fields.diameter.value.trim() || fields.number.value.trim() || element("review-bark").open || hasUnsavedLocation()) &&
+        !window.confirm("Ungespeicherte Stamm- oder Standorteingaben verwerfen und den Polter wechseln?"))
+    {
+        fields.polter.value = selectedPolter;
+        return;
+    }
+    if (!noActiveList)
+    {
+        fields.polter.value = selectedPolter;
+        save();
+        finishEdit();
+    }
+    selectedPolter = wanted;
+    fields.polter.value = wanted;
+    const current = lists.find((list) => list.id === activeId);
+    if (current && !current.entries.length && !listPolters(current).length && wanted)
+    {
+        current.polterName = wanted;
+    }
+    const target = current && matchesPolter(current, wanted) ? current : lists.find((list) => matchesPolter(list, wanted));
+    if (target)
+    {
+        noActiveList = false;
+        activeId = target.id;
+        entries = target.entries;
+        applyDefaults(target.defaults);
+        fields.polter.value = wanted;
+        refreshLocation();
+        save();
+        render();
+    }
+    else
+    {
+        noActiveList = true;
+        updateListSelect();
+        refreshLocation();
+    }
 });
 element("cancel-edit").addEventListener("click", () => {
     finishEdit();
@@ -787,6 +920,12 @@ element("rename-list").addEventListener("click", () => {
 });
 element("create-list").addEventListener("click", () => {
     const name = element("list-name").value.trim();
+    if (!selectedPolter)
+    {
+        element("list-start-status").textContent = "Bitte zuerst einen Polter auswählen oder eingeben.";
+        fields.polter.focus();
+        return;
+    }
     if (!name)
     {
         element("list-name").focus();
@@ -802,7 +941,7 @@ element("create-list").addEventListener("click", () => {
     }
     element("list-start-status").textContent = "";
     const list = {id : makeId(),
-        name, entries : [], defaults : {}, nextSequence : start};
+        name, polterName : selectedPolter, entries : [], defaults : {polter : selectedPolter}, nextSequence : start};
     lists.push(list);
     element("list-name").value = "";
     if (!switchList(list.id))
@@ -826,7 +965,17 @@ element("delete-list").addEventListener("click", () => {
     {
         return;
     }
-    const next = lists.find((item) => item.id !== activeId);
+    const next = lists.find((item) => item.id !== activeId && matchesPolter(item, selectedPolter));
+    if (!next)
+    {
+        lists = lists.filter((item) => item.id !== list.id);
+        noActiveList = true;
+        activeId = lists[0].id;
+        save();
+        updateListSelect();
+        refreshLocation();
+        return;
+    }
     if (switchList(next.id))
     {
         lists = lists.filter((item) => item.id !== list.id);
@@ -835,6 +984,7 @@ element("delete-list").addEventListener("click", () => {
 });
 restore();
 updateAssortments(fields.assortment.value);
+selectedPolter = fields.polter.value.trim();
 if (storageAvailable)
 {
     element("storage-status").textContent = "Auf diesem Gerät gespeichert";
