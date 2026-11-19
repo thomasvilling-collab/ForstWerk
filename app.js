@@ -148,7 +148,7 @@ function currentDefaults()
         assortment : fields.assortment.value, length : fields.length.value, grade};
 }
 
-const coniferSpecies = new Set(["Fichte", "Tanne", "Douglasie", "Kiefer", "Lärche", "Fichte/Tanne"]);
+const coniferSpecies = new Set(["Fichte", "Tanne", "Douglasie", "Kiefer", "Lärche"]);
 const coniferAssortments = ["Stammholz Nadel lang", "Standardlänge Nadel kurz B/C", "Stammholz Nadel Palette kurz D",
     "Stammholz Nadel Masten B", "Wertholz Nadel A (B)", "Sonstige", "Brennholz", "Sägeholz"];
 const otherAssortments = ["Sägeholz", "Industrieholz", "Brennholz", "Palisaden", "Mastholz", "Sonstiges"];
@@ -173,7 +173,7 @@ function updateAssortments(selected = fields.assortment.value, preserveLegacy = 
 function applyDefaults(defaults)
 {
     fields.polter.value = typeof defaults.polter === "string" ? defaults.polter : "";
-    fields.species.value = typeof defaults.species === "string" && defaults.species !== "Fichte/Tanne" ? defaults.species : "";
+    selectSpecies(defaults.species);
     updateAssortments(typeof defaults.assortment === "string" ? defaults.assortment : "");
     fields.length.value = typeof defaults.length === "string" ? defaults.length : "";
     setGrade([ "A", "B", "C", "D", "K" ].includes(defaults.grade) ? defaults.grade : "");
@@ -629,6 +629,15 @@ function render()
     updateLengthButtons();
 }
 
+function selectSpecies(value)
+{
+    fields.species.value = value ?? "";
+    if (fields.species.selectedIndex < 0)
+    {
+        fields.species.value = "";
+    }
+}
+
 function startEdit(id)
 {
     const entry = entries.find((item) => item.id === id);
@@ -640,7 +649,7 @@ function startEdit(id)
     fields.number.value = String(entry.number);
     fields.polter.value = entry.polter;
     selectedPolter = entry.polter.trim();
-    fields.species.value = entry.species;
+    selectSpecies(entry.species);
     updateAssortments(entry.assortment, true);
     fields.diameter.value = String(entry.diameter).replace(".", ",");
     fields.length.value = String(entry.length).replace(".", ",");
@@ -670,10 +679,6 @@ function finishEdit()
     fields.number.value = "";
     fields.bark.value = "";
     fields.bark.dataset.manual = "false";
-    if (fields.species.value === "Fichte/Tanne")
-    {
-        fields.species.value = "";
-    }
     updateAssortments();
     clearErrors();
     render();
@@ -724,7 +729,7 @@ form.addEventListener("submit", (event) => {
     {
         missing.push([ fields.polter, "Polterbezeichnung" ]);
     }
-    if (!fields.species.value || (!editingId && fields.species.value === "Fichte/Tanne"))
+    if (!fields.species.value)
     {
         missing.push([ fields.species, "Holzart" ]);
     }
