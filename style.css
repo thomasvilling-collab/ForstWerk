@@ -70,6 +70,7 @@ select { appearance: none; padding-right: 36px; background-image: url("data:imag
 .polter-card { grid-column: 1 / -1; grid-row: 4; }
 .lists-card { grid-column: 1; grid-row: 5; }
 .entry-card { grid-column: 1; grid-row: 6; }
+.entry-list-select { margin-bottom: 16px; }
 .overview { grid-column: 2; grid-row: 5 / 7; }
 .capture-settings, .summary-panel { margin-top: 20px; border-top: 1px solid #e5ece4; padding-top: 15px; }
 .bark-row { margin-top: 14px; }
