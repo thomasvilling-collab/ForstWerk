@@ -239,7 +239,7 @@ function validImport(data)
                 typeof entry.assortment !== "string" || !["A", "B", "C", "D", "K"].includes(entry.grade) ||
                 !Number.isFinite(entry.diameter) || entry.diameter <= 0 || entry.diameter > 1000 ||
                 !Number.isFinite(entry.length) || entry.length <= 0 || entry.length > 1000 ||
-                (entry.barkDeductionCm !== undefined && !hasBark(entry)))
+                (entry.barkDeductionCm !== undefined && !hasBark(entry)) || !validOriginPlot(entry.originPlot))
             {
                 return false;
             }

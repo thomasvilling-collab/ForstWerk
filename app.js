@@ -9,8 +9,33 @@ const fields = {
     diameter : element("diameter"),
     length : element("length"),
     bark : element("bark"),
+    originPlot : element("origin-plot"),
     number : element("stem-number")
 };
+// FIONA-Waldschläge aus Waldschlaege_EPSG4326.geojson (geo_id, schlag_nr, bez).
+const originPlots = [
+    {id : "a9191ebe-cf6d-4f6f-bcc0-6be20ec392f0", name : "1 · Binsberg Wald"},
+    {id : "94a1ee5b-bae4-4bda-b11b-e84f069f6b42", name : "2 · Untere Setze"},
+    {id : "8651bf4d-3d26-4d85-ad27-eed5986ed996", name : "3 · Binden"},
+    {id : "4e7c60c9-4ce5-4703-9682-63759ad44d53", name : "4 · Heidentor"},
+    {id : "e78b5c4e-4d05-4e87-8200-7d4b05e313f3", name : "7 · Guteret"},
+    {id : "ecd7ac94-e31c-4f35-b495-8d020eb03cfb", name : "31 · Rappenhalde"},
+    {id : "b7ffc7a2-3c32-4de0-9702-025391382c4c", name : "103 · Kehlen Denkingen"},
+    {id : "ed049f32-63c0-44d9-8992-32e0acfb7d3b", name : "200 · Felseck"},
+    {id : "2789b2e1-9b33-4037-8b51-35f93b49b2cb", name : "201 · Windingen"}
+];
+for (const plot of originPlots)
+{
+    fields.originPlot.add(new Option(plot.name, plot.id));
+}
+
+function validOriginPlot(plot)
+{
+    return plot === undefined || (plot !== null && typeof plot === "object" &&
+        typeof plot.id === "string" && plot.id.trim().length > 0 && plot.id.trim().length <= 200 &&
+        typeof plot.name === "string" && plot.name.trim().length > 0 && plot.name.trim().length <= 200);
+}
+
 const form = element("entry-form");
 const gradeButtons = Array.from(document.querySelectorAll("[data-grade]"));
 const lengthButtons = Array.from(document.querySelectorAll("[data-length]"));
@@ -476,7 +501,8 @@ function restore()
                        typeof entry.diameter === "number" && entry.diameter > 0 &&
                        Number.isFinite(entry.diameter) && typeof entry.length === "number" &&
                        entry.length > 0 && Number.isFinite(entry.length) &&
-                       (entry.barkDeductionCm === undefined || hasBark(entry)));
+                       (entry.barkDeductionCm === undefined || hasBark(entry)) &&
+                       validOriginPlot(entry.originPlot));
             if (validEntries.length !== list.entries.length)
             {
                 throw new Error("Ungültige Stammdaten");
@@ -565,6 +591,10 @@ function render()
                 "de-DE")} cm · ${entry.length.toLocaleString("de-DE")} m · ${
             adjustedVolume !== null ? formatter.format(adjustedVolume) + " fm o.R." :
                 formatter.format(volumeOf(entry.diameter, entry.length)) + " fm m.R. (ungeprüft)"}`;
+        if (entry.originPlot)
+        {
+            subtitle.textContent += ` · Herkunft: ${entry.originPlot.name}`;
+        }
         detail.append(title, subtitle);
         const actions = document.createElement("div");
         actions.className = "entry-actions";
@@ -645,7 +675,15 @@ function startEdit(id)
     {
         return;
     }
+    fields.originPlot.querySelector("option[data-imported]")?.remove();
     editingId = id;
+    if (entry.originPlot && !originPlots.some((plot) => plot.id === entry.originPlot.id))
+    {
+        const option = new Option(entry.originPlot.name, entry.originPlot.id);
+        option.dataset.imported = "true";
+        fields.originPlot.add(option);
+    }
+    fields.originPlot.value = entry.originPlot?.id ?? "";
     fields.number.value = String(entry.number);
     fields.polter.value = entry.polter;
     selectedPolter = entry.polter.trim();
@@ -677,6 +715,8 @@ function finishEdit()
     element("cancel-edit").hidden = true;
     fields.diameter.value = "";
     fields.number.value = "";
+    fields.originPlot.value = "";
+    fields.originPlot.querySelector("option[data-imported]")?.remove();
     fields.bark.value = "";
     fields.bark.dataset.manual = "false";
     updateAssortments();
@@ -789,6 +829,13 @@ form.addEventListener("submit", (event) => {
         barkDeductionCm : bark,
         grade
     };
+    const selectedOrigin = fields.originPlot.selectedOptions[0];
+    if (selectedOrigin?.value)
+    {
+        const previousOrigin = entries[index]?.originPlot;
+        record.originPlot = previousOrigin?.id === selectedOrigin.value ? previousOrigin :
+            {id : selectedOrigin.value, name : selectedOrigin.text};
+    }
     if (index >= 0)
     {
         entries[index] = record;
