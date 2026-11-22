@@ -33,7 +33,7 @@
             <div><p class="eyebrow">DEINE HOLZAUFNAHME</p><h1>Stämme erfassen</h1><p class="intro-copy">Einfach aufnehmen. Den Überblick behalten.</p></div>
             <div class="intro-icon" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16"/><circle cx="22" cy="22" r="11"/><circle cx="22" cy="22" r="6"/><path d="M22 6c6 7 8 18 2 32"/></svg></div>
         </div>
-        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.4.1</span></small></div>
+        <div class="offline-panel" role="status" aria-live="polite"><span id="connection-status">Verbindung wird geprüft …</span><span id="offline-status">Offline-Verfügbarkeit wird geprüft …</span><button type="button" id="apply-update" hidden>Neue Version installieren</button><span id="update-status"></span><small>ForstWerk <span id="app-version">1.4.3</span></small></div>
         <div class="backup-panel"><div><strong>Datensicherung</strong><span id="backup-reminder">Sicherung prüfen</span></div><button type="button" id="backup-all">Alle Listen sichern</button></div>
 
         <section class="polter-card card" aria-labelledby="polter-heading">
@@ -68,6 +68,10 @@
             <div class="entry-list-select">
                 <label class="field-label" for="list-select">Aktive Holzliste</label>
                 <select id="list-select"></select>
+                <label class="field-label" for="list-origin-plot">Herkunftsschlag der Holzliste</label>
+                <select id="list-origin-plot"><option value="">Keine Vorauswahl</option></select>
+                <button class="text-button" id="apply-list-origin" type="button">Für offene Stämme und neue Stämme setzen</button>
+                <p class="list-hint" id="list-origin-status" role="status"></p>
             </div>
             <form id="entry-form" novalidate>
                 <div class="measure-grid">

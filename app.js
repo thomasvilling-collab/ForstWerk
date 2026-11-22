@@ -24,9 +24,13 @@ const originPlots = [
     {id : "ed049f32-63c0-44d9-8992-32e0acfb7d3b", name : "200 · Felseck"},
     {id : "2789b2e1-9b33-4037-8b51-35f93b49b2cb", name : "201 · Windingen"}
 ];
+const listOriginPlot = element("list-origin-plot");
+const applyListOrigin = element("apply-list-origin");
+const listOriginStatus = element("list-origin-status");
 for (const plot of originPlots)
 {
     fields.originPlot.add(new Option(plot.name, plot.id));
+    listOriginPlot.add(new Option(plot.name, plot.id));
 }
 
 function validOriginPlot(plot)
@@ -197,6 +201,10 @@ function updateAssortments(selected = fields.assortment.value, preserveLegacy = 
 
 function applyDefaults(defaults)
 {
+    const originId = lists.find((list) => list.id === activeId)?.defaultOriginPlotId;
+    listOriginPlot.value = originPlots.some((plot) => plot.id === originId) ? originId : "";
+    fields.originPlot.value = listOriginPlot.value;
+    listOriginStatus.textContent = "";
     fields.polter.value = typeof defaults.polter === "string" ? defaults.polter : "";
     selectSpecies(defaults.species);
     updateAssortments(typeof defaults.assortment === "string" ? defaults.assortment : "");
@@ -567,6 +575,7 @@ function setVolume()
 
 function render()
 {
+    applyListOrigin.disabled = Boolean(editingId);
     const list = element("entries");
     list.replaceChildren();
     let volume = 0;
@@ -715,8 +724,9 @@ function finishEdit()
     element("cancel-edit").hidden = true;
     fields.diameter.value = "";
     fields.number.value = "";
-    fields.originPlot.value = "";
     fields.originPlot.querySelector("option[data-imported]")?.remove();
+    const originId = lists.find((list) => list.id === activeId)?.defaultOriginPlotId;
+    fields.originPlot.value = originPlots.some((plot) => plot.id === originId) ? originId : "";
     fields.bark.value = "";
     fields.bark.dataset.manual = "false";
     updateAssortments();
@@ -960,6 +970,33 @@ element("cancel-edit").addEventListener("click", () => {
 });
 element("list-select").addEventListener("change", (event) => {
     switchList(event.target.value);
+});
+applyListOrigin.addEventListener("click", () => {
+    const list = noActiveList ? null : lists.find((item) => item.id === activeId);
+    if (!list || editingId)
+    {
+        return;
+    }
+    const plot = originPlots.find((item) => item.id === listOriginPlot.value);
+    list.defaultOriginPlotId = plot?.id ?? "";
+    let assigned = 0;
+    if (plot)
+    {
+        for (const entry of list.entries)
+        {
+            if (!entry.originPlot)
+            {
+                entry.originPlot = {id : plot.id, name : plot.name};
+                assigned++;
+            }
+        }
+    }
+    fields.originPlot.value = list.defaultOriginPlotId;
+    save();
+    render();
+    listOriginStatus.textContent = plot
+        ? `Herkunft bei ${assigned} offenen Stämmen ergänzt. Für neue Stämme vorausgewählt.`
+        : "Vorauswahl für neue Stämme entfernt.";
 });
 element("rename-list").addEventListener("click", () => {
     const list = lists.find((item) => item.id === activeId);
