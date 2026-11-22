@@ -40,6 +40,29 @@ function validOriginPlot(plot)
         typeof plot.name === "string" && plot.name.trim().length > 0 && plot.name.trim().length <= 200);
 }
 
+function setOpenOrigins(stems, plot, ask = false)
+{
+    if (!plot)
+    {
+        return 0;
+    }
+    const openStems = stems.filter((stem) => !stem.originPlot);
+    if (!openStems.length)
+    {
+        return 0;
+    }
+    if (ask && !window.confirm(
+        `„${plot.name}“ auch für alle Stämme ohne Herkunftsschlag in dieser Holzliste übernehmen? (${openStems.length})`))
+    {
+        return 0;
+    }
+    for (const stem of openStems)
+    {
+        stem.originPlot = {id : plot.id, name : plot.name};
+    }
+    return openStems.length;
+}
+
 const form = element("entry-form");
 const gradeButtons = Array.from(document.querySelectorAll("[data-grade]"));
 const lengthButtons = Array.from(document.querySelectorAll("[data-length]"));
@@ -840,9 +863,9 @@ form.addEventListener("submit", (event) => {
         grade
     };
     const selectedOrigin = fields.originPlot.selectedOptions[0];
+    const previousOrigin = entries[index]?.originPlot;
     if (selectedOrigin?.value)
     {
-        const previousOrigin = entries[index]?.originPlot;
         record.originPlot = previousOrigin?.id === selectedOrigin.value ? previousOrigin :
             {id : selectedOrigin.value, name : selectedOrigin.text};
     }
@@ -860,8 +883,13 @@ form.addEventListener("submit", (event) => {
     {
         list.nextSequence = number + 1;
     }
+    const assigned = previousOrigin ? 0 : setOpenOrigins(entries, record.originPlot, true);
     finishEdit();
     save();
+    if (assigned)
+    {
+        listOriginStatus.textContent = `Herkunft bei ${assigned} weiteren Stämmen ergänzt.`;
+    }
     fields[nextFocus].focus({preventScroll : true});
     fields[nextFocus].select();
 });
@@ -979,18 +1007,7 @@ applyListOrigin.addEventListener("click", () => {
     }
     const plot = originPlots.find((item) => item.id === listOriginPlot.value);
     list.defaultOriginPlotId = plot?.id ?? "";
-    let assigned = 0;
-    if (plot)
-    {
-        for (const entry of list.entries)
-        {
-            if (!entry.originPlot)
-            {
-                entry.originPlot = {id : plot.id, name : plot.name};
-                assigned++;
-            }
-        }
-    }
+    const assigned = setOpenOrigins(list.entries, plot);
     fields.originPlot.value = list.defaultOriginPlotId;
     save();
     render();
