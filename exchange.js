@@ -107,6 +107,8 @@ function exportCsv()
     selectedLists().forEach((list) => {
         groupsForList(list).forEach((group) => {
             rows.push(["Holzliste", list.name]);
+            if (list.harvestStart) rows.push(["Hiebbeginn", list.harvestStart]);
+            if (list.harvestEnd) rows.push(["Hiebende", list.harvestEnd]);
             rows.push(["Polter", group.polter]);
             rows.push(["Sortiment", group.assortment]);
             const location = polterLocation(list, group.polter);
@@ -163,6 +165,8 @@ function preparePrint()
         section.className = "print-list";
         appendText(section, "p", "FORSTWERK · HOLZAUFNAHME", "print-brand");
         appendText(section, "h1", list.name);
+        if (list.harvestStart) appendText(section, "p", `Hiebbeginn: ${list.harvestStart.split("-").reverse().join(".")}`);
+        if (list.harvestEnd) appendText(section, "p", `Hiebende: ${list.harvestEnd.split("-").reverse().join(".")}`);
         const pending = list.entries.filter((entry) => !hasBark(entry)).length;
         appendText(section, "p", `${list.entries.length} ${list.entries.length === 1 ? "Stamm" : "Stämme"} · Geprüftes Volumen: ${formatter.format(list.entries.reduce((sum, entry) => sum + (stemVolume(entry) || 0), 0))} fm o.R.${pending ? ` · ${pending} ungeprüft` : ""}`);
         groupsForList(list).forEach((group) => {

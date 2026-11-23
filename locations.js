@@ -54,8 +54,7 @@ function refreshLocation()
     {
         map.removeAttribute("href");
     }
-    const suggestions = element("polter-suggestions");
-    suggestions.replaceChildren();
+    const savedPolters = element("saved-polter-select");
     const names = new Map();
     for (const item of lists)
     {
@@ -64,10 +63,10 @@ function refreshLocation()
             names.set(polterKey(name), name);
         }
     }
-    for (const name of names.values())
-    {
-        suggestions.append(new Option(name, name));
-    }
+    savedPolters.replaceChildren(new Option(names.size ? "Polter auswählen" : "Keine gespeicherten Polter", ""),
+        ...Array.from(names, ([key, name]) => new Option(name, key)));
+    savedPolters.disabled = names.size === 0;
+    savedPolters.value = names.has(polterKey(selectedPolter)) ? polterKey(selectedPolter) : "";
 }
 
 function storeLocation(latitude, longitude, accuracy)

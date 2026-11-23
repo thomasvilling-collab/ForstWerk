@@ -289,6 +289,14 @@ function updateListSelect()
     element("rename-list").disabled = noActiveList;
     element("list-select").disabled = matching.length === 0;
     const active = noActiveList ? null : lists.find((list) => list.id === activeId);
+    const harvestPeriod = element("harvest-period");
+    if (harvestPeriod.dataset.listId !== (active?.id ?? ""))
+    {
+        harvestPeriod.dataset.listId = active?.id ?? "";
+        element("harvest-start").value = active?.harvestStart ?? "";
+        element("harvest-end").value = active?.harvestEnd ?? "";
+        element("harvest-period-status").textContent = "";
+    }
     const mixed = active && listPolters(active).length > 1;
     element("list-context").textContent = noActiveList ? "Für diesen Polter gibt es noch keine Holzliste. Lege unten eine neue Liste an." :
         mixed ? "Altbestand: Diese Liste enthält mehrere Polter und zeigt weiterhin alle zugehörigen Stämme." : "";
@@ -945,12 +953,20 @@ Object.values(fields).forEach((field) => {
         }
     });
 });
-fields.polter.addEventListener("change", () => {
-    const wanted = fields.polter.value.trim();
+function restorePolterSelection()
+{
+    const select = element("saved-polter-select");
+    const currentKey = polterKey(selectedPolter);
+    select.value = Array.from(select.options).some((option) => option.value === currentKey) ? currentKey : "";
+}
+
+function choosePolter(wanted)
+{
     if (polterKey(wanted) === polterKey(selectedPolter))
     {
         fields.polter.value = wanted;
         selectedPolter = wanted;
+        restorePolterSelection();
         save();
         return;
     }
@@ -958,6 +974,7 @@ fields.polter.addEventListener("change", () => {
         !window.confirm("Ungespeicherte Stamm- oder Standorteingaben verwerfen und den Polter wechseln?"))
     {
         fields.polter.value = selectedPolter;
+        restorePolterSelection();
         return;
     }
     if (!noActiveList)
@@ -969,11 +986,12 @@ fields.polter.addEventListener("change", () => {
     selectedPolter = wanted;
     fields.polter.value = wanted;
     const current = lists.find((list) => list.id === activeId);
-    if (current && !current.entries.length && !listPolters(current).length && wanted)
+    let target = current && matchesPolter(current, wanted) ? current : lists.find((list) => matchesPolter(list, wanted));
+    if (!target && current && !current.entries.length && !listPolters(current).length && wanted)
     {
         current.polterName = wanted;
+        target = current;
     }
-    const target = current && matchesPolter(current, wanted) ? current : lists.find((list) => matchesPolter(list, wanted));
     if (target)
     {
         noActiveList = false;
@@ -991,6 +1009,19 @@ fields.polter.addEventListener("change", () => {
         updateListSelect();
         refreshLocation();
     }
+}
+
+fields.polter.addEventListener("change", () => choosePolter(fields.polter.value.trim()));
+element("saved-polter-select").addEventListener("change", (event) => {
+    const select = event.target;
+    if (select.value)
+    {
+        choosePolter(select.selectedOptions[0].text);
+    }
+    else
+    {
+        restorePolterSelection();
+    }
 });
 element("cancel-edit").addEventListener("click", () => {
     finishEdit();
@@ -998,6 +1029,33 @@ element("cancel-edit").addEventListener("click", () => {
 });
 element("list-select").addEventListener("change", (event) => {
     switchList(event.target.value);
+});
+element("save-harvest-period").addEventListener("click", () => {
+    const list = noActiveList ? null : lists.find((item) => item.id === activeId);
+    const status = element("harvest-period-status");
+    if (!list || storageBlocked)
+    {
+        status.textContent = "Hiebzeitraum kann nicht gespeichert werden.";
+        return;
+    }
+    const start = element("harvest-start");
+    const end = element("harvest-end");
+    if (!start.validity.valid || !end.validity.valid ||
+        (start.value && end.value && start.value > end.value))
+    {
+        status.textContent = "Bitte gültige Daten eingeben. Das Hiebende darf nicht vor dem Hiebbeginn liegen.";
+        return;
+    }
+    if (start.value)
+        list.harvestStart = start.value;
+    else
+        delete list.harvestStart;
+    if (end.value)
+        list.harvestEnd = end.value;
+    else
+        delete list.harvestEnd;
+    save();
+    status.textContent = storageAvailable ? "Hiebzeitraum gespeichert." : "Hiebzeitraum in diesem Gerät nicht gespeichert.";
 });
 applyListOrigin.addEventListener("click", () => {
     const list = noActiveList ? null : lists.find((item) => item.id === activeId);
